@@ -1,6 +1,6 @@
-from oura_api_connector import OuraApiConnector
-from constants import *
-
+from connector.abstract_connector import AbstractConnector
+from common.constants import *
+import requests
 
 
 class Summary:
@@ -12,7 +12,7 @@ class Summary:
     def __init__(self, summary_type='undefined'):
         self._summary_type = summary_type
 
-    def _parse_day(self, day_data: dict):
+    def _parse_connector_response(self, day_data: dict) -> None:
         """
         Parsing the data of the day by dynamically creating
         class attributes, named after the dictionary key. 
@@ -21,18 +21,23 @@ class Summary:
         for var_name, var_value in day_data.items():
             setattr(self, var_name, var_value)
 
-    def load(self, connector: OuraApiConnector, date: str):
+    def load(self, connector: AbstractConnector, date: str) -> bool:
         """
         Requesting the data for the given date via the connector,
         parsing it and creating variables. 
-
         Each Summary Object only contains data for one day. Therefore
         we only need to retrieve data for this given day. 
         """
         
-        response = connector.get_summary(self._summary_type, start=date, end=date)
-        day_data = response[self._summary_type][0]
-        self._parse_day(day_data)
+        success, resp_dict = connector.get_summary(self._summary_type, date)
+        
+        if success:
+            self._parse_connector_response(resp_dict)
+
+        return success
+
+    def __str__(self):
+        return "Summary (Type: {}, Date: {})".format(self.summary_type, self.summary_date)
 
     @property
     def summary_type(self):
@@ -67,18 +72,22 @@ class Bedtime(Summary):
     def __init__(self):
         super().__init__(summary_type=BEDTIME)
 
-    def load(self, connector: OuraApiConnector, date: str):
-        """
-        The API response of Bedtime varies slightly from the other summary types. 
-        Also before parsing, we rename the dictionary key 'date' to 'summary_date'
-        to make the attributes consistent with the other classes.
-        """
-        
-        response = connector.get_summary(self._summary_type, start=date, end=date)
-        
-        day_data = response['ideal_bedtimes'][0]
-        day_data['summary_date'] = day_data.pop('date')
-        
-        self._parse_day(day_data)
 
+class Subjective(Summary):
+
+    def __init__(self):
+        super().__init__(summary_type=SUBJECTIVE)
+
+
+
+def get_summary_class_from_str(summary_type):
     
+    str_to_class = {
+        SLEEP: Sleep,
+        READINESS: Readiness,
+        ACTIVITY: Activity,
+        BEDTIME: Bedtime,
+        SUBJECTIVE: Subjective
+    }
+
+    return str_to_class[summary_type]

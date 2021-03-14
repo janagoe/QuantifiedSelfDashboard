@@ -1,2 +1,4 @@
-"# QuantifiedSelfDashboard" 
-"# QuantifiedSelfDashboard" 
+# QuantifiedSelfDashboard
+
+
+python -m main
