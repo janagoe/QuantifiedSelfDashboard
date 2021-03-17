@@ -1,6 +1,6 @@
+import requests
 from connector.abstract_connector import AbstractConnector
 from common.constants import *
-import requests
 
 
 class Summary:
@@ -73,10 +73,30 @@ class Bedtime(Summary):
         super().__init__(summary_type=BEDTIME)
 
 
+
+
 class Subjective(Summary):
+
+    subjective_tracking_types = [TYPE_BOOL, TYPE_NUMBER, TYPE_PERCENTAGE]
 
     def __init__(self):
         super().__init__(summary_type=SUBJECTIVE)
+
+    @classmethod
+    def is_valid_subjective_input(cls, content, input_type):
+        if input_type not in cls.__subjective_tracking_types:
+            return False
+
+        if input_type == TYPE_BOOL:
+            return content.__class__ == bool
+
+        if input_type == TYPE_PERCENTAGE:
+            correct_type = content.__class__ in [int, float]    
+            within_range = 0 <= content <= 100
+            return correct_type and within_range
+
+        if input_type == TYPE_NUMBER:
+            return content.__class__ in [int, float]    
 
 
 

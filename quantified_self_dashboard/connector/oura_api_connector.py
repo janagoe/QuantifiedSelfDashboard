@@ -1,7 +1,6 @@
 import requests
 import json
 from typing import Tuple
-
 from common.constants import *
 from connector.abstract_connector import AbstractConnector
 
@@ -11,6 +10,8 @@ class OuraApiConnector(AbstractConnector):
 
     __oura_api_request_template = 'https://api.ouraring.com/v1/{}'
     __oura_summary_types = [SLEEP, READINESS, ACTIVITY, BEDTIME]
+
+    supported_summary_types = [SLEEP, READINESS, ACTIVITY, BEDTIME]
 
     def __init__(self, access_token):
         self.__access_token = access_token

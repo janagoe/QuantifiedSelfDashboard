@@ -44,7 +44,12 @@ class SummaryContainer:
 
     def __load_via_connector(self, connector):
 
+        common_summary_types = list(set.intersection(set(self.__contained_summaries), set(connector.supported_summary_types)))
+
         for summary_type, container_attr, required_dates_attr in zip(self.__contained_summaries, self.__summary_container_attribute_names, self.__summary_required_dates_attribute_names):
+            if summary_type not in common_summary_types:
+                continue
+            
             required_dates_for_summary_type = getattr(self, required_dates_attr)
             summary_class = get_summary_class_from_str(summary_type)
 
@@ -71,8 +76,8 @@ class SummaryContainer:
             setattr(self, required_dates_attr, dates)
 
         # letting each connector try to load everything required
-        for i in range(1): # replace by len(connectors) later
-            self.__load_via_connector(connectors[i])
+        for conn in connectors:
+            self.__load_via_connector(conn)
 
         # checking if all required dates got loaded
         for req_attr in self.__summary_required_dates_attribute_names:

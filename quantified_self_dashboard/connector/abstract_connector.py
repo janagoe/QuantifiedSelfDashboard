@@ -3,8 +3,9 @@ import json
 from typing import Tuple
 
 
-
 class AbstractConnector:
+
+    supported_summary_types = []
 
     def __init__(self):
         raise NotImplementedError("Abstract Connector Class")
