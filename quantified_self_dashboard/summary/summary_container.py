@@ -67,9 +67,12 @@ class SummaryContainer:
             
             setattr(self, required_dates_attr, still_required_dates)
             setattr(self, container_attr, new_summary_objects + old_summary_objects)
+        
 
     def load(self, connectors: List[AbstractConnector], start: str, end: str): 
         dates = all_date_strings_between_dates(start, end)
+        if not len(dates) > 0:
+            raise AttributeError()
 
         # in beginning all dates are required for all summary types
         for required_dates_attr in self.__summary_required_dates_attribute_names:
@@ -79,11 +82,21 @@ class SummaryContainer:
         for conn in connectors:
             self.__load_via_connector(conn)
 
+        # sort by date
+        # assuming the dates are ordered lexicographically aswell
+        for summary_type in self.__contained_summaries:
+            container_attr_name = self.__get_container_attribute_name(summary_type)
+            container_of_type = getattr(self, container_attr_name)
+            sorted_container = sorted(container_of_type, key=lambda s: s.summary_type)
+            setattr(self, container_attr_name, sorted_container)
+
         # checking if all required dates got loaded
         for req_attr in self.__summary_required_dates_attribute_names:
             req_dates = getattr(self, req_attr)
             if len(req_dates) > 0:
                 return False
+
+        self.__dates = dates
         return True
 
     def __get_container_attribute_name(self, summary_type: str):
@@ -93,10 +106,13 @@ class SummaryContainer:
         return None
     
     def get_summary_of_date(self, summary_type: str, date: str):
-        container_of_type = getattr(self, self.__get_container_attribute_name(summary_type))
-        filtered = list(filter(lambda s: s.summary_date == date, container_of_type))
-        if len(filtered) > 0:
-            return filtered[0]
+        cont_attr_name = self.__get_container_attribute_name(summary_type)
+        if cont_attr_name:
+            container_of_type = getattr(self, cont_attr_name)
+            filtered = list(filter(lambda s: s.summary_date == date, container_of_type))
+            if len(filtered) > 0:
+                return filtered[0]
+            return None
         return None
 
     def get_summaries_within_timerange(self, summary_type: str, start: str, end: str):
@@ -106,3 +122,43 @@ class SummaryContainer:
             return filtered
         return None
 
+    def get_summary_bundle_of_date(self, date: str) -> dict():
+        date_summaries = []
+        for summary_type in self.__contained_summaries:
+            date_summary = self.get_summary_of_date(summary_type, date)
+            if date_summary:
+                date_summaries.append(date_summary)
+        
+        bundle = dict()
+        bundle['summary_date'] = date
+        for summary in date_summaries:
+            summary_type = summary.summary_type
+            
+            # every attribute we stored in the summary
+            for attr in summary.measurement_attributes: 
+                if attr == 'summary_date':
+                    continue
+                bundle_attr_name = "{}_{}".format(summary_type, attr)
+                bundle[bundle_attr_name] = getattr(summary, attr)
+
+        return bundle
+
+    def __iter__(self):
+        self.__current_iter_date_index = 0
+        return self
+
+    def __next__(self):
+        if self.__current_iter_date_index < len(self.__dates):
+            current_date = self.__dates[self.__current_iter_date_index]
+            self.__current_iter_date_index += 1
+            return self.get_summary_bundle_of_date(current_date)
+        else:
+            raise StopIteration()
+
+
+    def get_dict_of_bundles(self) -> dict:
+        data = dict()
+        for index, date in enumerate(self.__dates):
+            bundle = self.get_summary_bundle_of_date(date)
+            data[index] = bundle
+        return data
