@@ -103,6 +103,10 @@ class OuraApiConnector(AbstractConnector):
             for i in range(len(resp_content[summary_type])):
                 current = resp_content[summary_type][i]
                 current['summary_date'] = current.pop('date')
+
+                bedtime_window_dict = current.pop('bedtime_window')
+                current['bedtime_window_start'] = bedtime_window_dict['start']
+                current['bedtime_window_end'] = bedtime_window_dict['end']
                 
         return resp_content
         

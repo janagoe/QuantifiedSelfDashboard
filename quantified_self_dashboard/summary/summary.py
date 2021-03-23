@@ -17,9 +17,10 @@ class Summary:
         Parsing the data of the day by dynamically creating
         class attributes, named after the dictionary key. 
         """
-
+        self.__measurement_attributes = []
         for var_name, var_value in day_data.items():
             setattr(self, var_name, var_value)
+            self.__measurement_attributes.append(var_name)
 
     def load(self, connector: AbstractConnector, date: str) -> bool:
         """
@@ -51,6 +52,10 @@ class Summary:
     def summary_date(self, summary_date: str):
         self._summary_date = summary_date
 
+    @property
+    def measurement_attributes(self):
+        return self.__measurement_attributes
+
 
 class Sleep(Summary):
     def __init__(self):
@@ -71,8 +76,6 @@ class Bedtime(Summary):
 
     def __init__(self):
         super().__init__(summary_type=BEDTIME)
-
-
 
 
 class Subjective(Summary):
