@@ -5,6 +5,7 @@ from summary.summary import *
 from summary.summary_container import SummaryContainer
 from connector import oura_api_connector, gui_input_connector
 from common.date_helper import *
+from storage.storage import CsvStorage
 
 
 from ast import literal_eval
@@ -21,15 +22,10 @@ if __name__ == '__main__':
 
     conn_oura = oura_api_connector.OuraApiConnector(access_token)
     conn_sub = gui_input_connector.GuiInputConnector(subjective_tracking_items)
+    connectors = [conn_oura, conn_sub]
 
-    s = SummaryContainer()
-    succ = s.load([conn_oura, conn_sub], "2021-03-04", "2021-03-10")
+    container = SummaryContainer(containing_subjective=True)
+    container.load(connectors, "2021-03-01", "2021-03-22")
 
-    summaries = s.get_summaries_within_timerange(SLEEP, "2021-03-05", "2021-03-07")
-    summaries += s.get_summaries_within_timerange(READINESS, "2021-03-05", "2021-03-07")
-    summaries += s.get_summaries_within_timerange(ACTIVITY, "2021-03-05", "2021-03-07")
-    summaries += s.get_summaries_within_timerange(BEDTIME, "2021-03-05", "2021-03-07")
-    summaries += s.get_summaries_within_timerange(SUBJECTIVE, "2021-03-05", "2021-03-07")
-
-    for i in summaries:
-        print(i)
+    storage = CsvStorage(["quantified_self_dashboard", "data", "testfile.csv"])
+    storage.save(container)
