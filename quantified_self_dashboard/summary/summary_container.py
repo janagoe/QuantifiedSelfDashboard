@@ -94,6 +94,7 @@ class SummaryContainer:
         for req_attr in self.__summary_required_dates_attribute_names:
             req_dates = getattr(self, req_attr)
             if len(req_dates) > 0:
+                print("Not all summaries were able to load. Is the access token set?")
                 return False
 
         self.__dates = dates
