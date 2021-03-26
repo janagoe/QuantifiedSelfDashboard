@@ -3,7 +3,7 @@ from common.date_helper import all_date_strings_between_dates, is_date_within_ra
 from common.constants import *
 from typing import List
 from connector.abstract_connector import AbstractConnector
-
+import numpy as np
 
 
 class SummaryContainer:
@@ -144,6 +144,36 @@ class SummaryContainer:
 
         return bundle
 
+    def get_dict_of_bundles(self) -> dict:
+        data = dict()
+        for index, date in enumerate(self.__dates):
+            bundle = self.get_summary_bundle_of_date(date)
+            data[index] = bundle
+        return data
+
+    def get_np_array(self, start, end, summary_type, attr_type) -> np.array:
+        dates = all_date_strings_between_dates(start, end)
+        value_array = np.empty(len(dates))
+        value_array[:] = np.NaN
+
+        summaries = self.get_summaries_within_timerange(summary_type, start, end)
+        # assumption: summaries are ordered by date
+
+        summary_iter = iter(summaries)
+
+        current_summary = next(summary_iter)
+        for index, date in enumerate(dates):
+            if current_summary.summary_date == date:
+                value = getattr(current_summary, attr_type)
+                value_array[index] = value
+                try:
+                    current_summary = next(summary_iter)
+                except StopIteration:
+                    return value_array
+
+        return value_array
+
+
     def __iter__(self):
         self.__current_iter_date_index = 0
         return self
@@ -156,10 +186,3 @@ class SummaryContainer:
         else:
             raise StopIteration()
 
-
-    def get_dict_of_bundles(self) -> dict:
-        data = dict()
-        for index, date in enumerate(self.__dates):
-            bundle = self.get_summary_bundle_of_date(date)
-            data[index] = bundle
-        return data
