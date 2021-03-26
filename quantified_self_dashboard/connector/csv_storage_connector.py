@@ -42,6 +42,7 @@ class CsvStorageConnector(AbstractConnector):
         summary_date_entries = date_entry.loc[:, date_entry.columns.str.match(summary_type_column_identifier_re)]
 
         data = dict()
+        data['summary_date'] = date
         for column_name in summary_date_entries:
             summary_entry = re.sub(summary_type_suffix_re, '', column_name)
             value = summary_date_entries[column_name].values[0]
