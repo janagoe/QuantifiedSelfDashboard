@@ -1,4 +1,3 @@
-import requests
 from connector.abstract_connector import AbstractConnector
 from common.constants import *
 

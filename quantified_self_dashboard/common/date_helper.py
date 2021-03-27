@@ -68,3 +68,10 @@ def is_date_within_range(date, start, end):
 
     return start_time <= wanted <= end_time
 
+
+def is_date_before_another_date(date, another_date):
+    d1 = simple_string_to_datetime(date)
+    d2 = simple_string_to_datetime(another_date)
+
+    return d1 < d2
+

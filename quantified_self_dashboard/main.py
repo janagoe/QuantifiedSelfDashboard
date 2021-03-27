@@ -6,7 +6,7 @@ from summary.summary_container import SummaryContainer
 from connector import oura_api_connector, gui_input_connector, csv_storage_connector
 from common.date_helper import *
 from storage.csv_storage import CsvStorage
-from analyser import abstract_analyser, plotly_analyzer
+from analyser import abstract_analyser, plotly_analyser
 
 
 if __name__ == '__main__':
@@ -35,6 +35,6 @@ if __name__ == '__main__':
     # storage = CsvStorage(storage_file_path)
     # storage.save(container)
 
-    analyser = plotly_analyzer.PlotlyAnalyzer(output_location, container)
-    analyser.analyze("2021-03-01", "2021-03-20", PERIODICITY_DAILY, "test")
+    analyser = plotly_analyser.PlotlyAnalyser(output_location, container)
+    analyser.analyse("2021-03-01", "2021-03-20", Periodicity.daily, "test")
     print()

@@ -39,8 +39,8 @@ class GuiInputConnector(AbstractConnector):
 
     def __ask_data_from_user(self):
         """
-            Creating dummy data for now.
-            Later getting the data from a gui
+        Creating dummy data for now.
+        Later getting the data from a gui
         """
 
         data = dict()
