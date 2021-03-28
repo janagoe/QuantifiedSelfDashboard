@@ -1,6 +1,7 @@
 import random 
 from typing import Tuple, List
-from common.constants import *
+
+from common.constants import SummaryType, SUMMARY_DATE
 from connector.abstract_connector import AbstractConnector
 from summary.summary import Subjective
 
@@ -8,7 +9,7 @@ from summary.summary import Subjective
 
 class GuiInputConnector(AbstractConnector):
 
-    supported_summary_types = [SUBJECTIVE]
+    supported_summary_types = [SummaryType.subjective]
 
     def __init__(self, subjective_tracking_items: List[Tuple[str, str]]):
 
@@ -27,13 +28,13 @@ class GuiInputConnector(AbstractConnector):
         if len(self.__subjective_tracking_attr_types) != len(self.__subjective_tracking_attributes):
             raise ValueError("Duplication of Subjective Tracking Names")
 
-    def get_summary(self, summary_type: str, date: str) -> Tuple[bool, dict]:
+    def get_summary(self, summary_type: SummaryType, date: str) -> Tuple[bool, dict]:
 
-        if summary_type != SUBJECTIVE:
+        if summary_type != SummaryType.subjective:
             raise AttributeError("The GuiInputConnector can only collect Subjective Summary Types")
 
         data = self.__ask_data_from_user()
-        data['summary_date'] = date
+        data[SUMMARY_DATE] = date
         
         return True, data
 

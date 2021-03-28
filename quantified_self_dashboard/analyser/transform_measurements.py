@@ -1,15 +1,12 @@
+from typing import Callable
 from common.constants import *
 
 
-
 identity = lambda x: x
-
 seconds_to_hours = lambda x: x / 3600 
 
 
-
 # attribute_name: [display_transform x->x, original_type, transformed_type, original_unit: str, transformed_unit: str, title: str]
-
 sleep_transform = {
 
     "total": [seconds_to_hours, int, float, Unit.seconds, Unit.hours, "Total Sleep Time"],
@@ -50,15 +47,10 @@ subjective_transform = dict()
 
 
 summary_type_transform = {
-    SLEEP: sleep_transform,
-    READINESS: readiness_transform,
-    ACTIVITY: activity_transform,
-    BEDTIME: bedtime_transform,
-    SUBJECTIVE: subjective_transform,
+    SummaryType.sleep: sleep_transform,
+    SummaryType.readiness: readiness_transform,
+    SummaryType.activity: activity_transform,
+    SummaryType.bedtime: bedtime_transform,
+    SummaryType.subjective: subjective_transform,
 }
-
-
-
-
-
 

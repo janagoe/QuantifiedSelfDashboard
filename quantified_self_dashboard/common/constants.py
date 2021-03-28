@@ -1,20 +1,27 @@
 from enum import Enum
 
 
-# TODO: move into enum
-SLEEP = 'sleep'
-READINESS = 'readiness'
-ACTIVITY = 'activity'
-BEDTIME = 'bedtime'
-USERINFO = 'userinfo'
-SUBJECTIVE = 'subjective'
 
-# TODO: move into enum
-TYPE_BOOL = 'bool'
-TYPE_PERCENTAGE = 'percentage'
-TYPE_NUMBER = 'number'
+SUMMARY_DATE = 'summary_date'
 
 
+# SummaryTypes ------------------------------
+
+SummaryType = Enum(
+    value = 'SummaryType',
+    names = [
+        ('sleep', 0),
+        ('readiness', 1),
+        ('activity', 2),
+        ('bedtime', 3),
+        ('userinfo', 4),
+        ('subjective', 5),
+    ]
+)
+
+
+
+# Periodicities ------------------------------
 
 Periodicity = Enum(
     value ='Periodictiy',
@@ -25,6 +32,9 @@ Periodicity = Enum(
         ('yearly', 3)
     ]
 )
+
+
+# Units ------------------------------
 
 Unit = Enum(
     value = 'Unit',
@@ -54,9 +64,19 @@ UnitsAnnotationText = {
 }
 
 
+# AnalysisTypes ------------------------------
+
 AnalysisType = Enum(
     value = 'AnalysisType',
     names = [
         ("test", 0)
     ]
 )
+
+
+
+
+# TODO: move into enum
+TYPE_BOOL = 'bool'
+TYPE_PERCENTAGE = 'percentage'
+TYPE_NUMBER = 'number'

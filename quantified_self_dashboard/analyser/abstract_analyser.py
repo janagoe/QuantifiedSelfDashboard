@@ -1,5 +1,6 @@
 import os
 from typing import List
+
 from summary.summary_container import SummaryContainer
 from common.constants import AnalysisType, Periodicity
 

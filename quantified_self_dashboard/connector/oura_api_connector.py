@@ -1,27 +1,42 @@
 import requests
 import json
+
 from typing import Tuple
-from common.constants import *
+
+from common.constants import SummaryType, SUMMARY_DATE
 from connector.abstract_connector import AbstractConnector
 
 
 
 class OuraApiConnector(AbstractConnector):
+    """ Retrieving data from the oura ring API. """
 
+    # summary types which the oura api connector can retrieve
+    supported_summary_types = [SummaryType.sleep, SummaryType.readiness, SummaryType.activity, SummaryType.bedtime]
+
+    # template for http requests to the oura api
     __oura_api_request_template = 'https://api.ouraring.com/v1/{}'
-    __oura_summary_types = [SLEEP, READINESS, ACTIVITY, BEDTIME]
 
-    supported_summary_types = [SLEEP, READINESS, ACTIVITY, BEDTIME]
 
-    def __init__(self, access_token):
+    def __init__(self, access_token: str):
+        """
+        Parameters
+        ----------
+        access_token : str
+            The access token is necessary to get permission to access 
+            the personal data from the oura ring API.        
+        """
         self.__access_token = access_token
 
-    def __request_summary(self, summary_type: str, start: str=None, end:str =None) -> requests.Response:
+
+    def __request_summary(self, summary_type: SummaryType, start: str=None, end:str =None) -> requests.Response:
         """
         Calling the Oura API with the summary type and times. 
         Assembling the URL parameters properly with the given parameters.  
 
-        summary_type : str
+        Parameters
+        ----------
+        summary_type : SummaryType
             Indicating which summary should be retrieved from the API. 
 
         start : str
@@ -29,23 +44,27 @@ class OuraApiConnector(AbstractConnector):
         
         end : str
             If end is None, it will be set to the current day. 
+
+        Returns
+        -------
+        requests.Response object
         """
 
-        if summary_type not in OuraApiConnector.__oura_summary_types:
+        if summary_type not in OuraApiConnector.supported_summary_types:
             raise ValueError("Summary type not supported by oura API.")
 
         if not start and not end:
             param_template = "{}?access_token={}"
-            params = (summary_type, self.__access_token)
+            params = (summary_type.name, self.__access_token)
         elif start and not end:
             param_template = "{}?start={}&access_token={}"
-            params = (summary_type, start, self.__access_token)
+            params = (summary_type.name, start, self.__access_token)
         elif not start and end:
             param_template = "{}?end={}&access_token={}"
-            params = (summary_type, end, self.__access_token)
+            params = (summary_type.name, end, self.__access_token)
         else: # start and end
             param_template = "{}?start={}&end={}&access_token={}"
-            params = (summary_type, start, end, self.__access_token)
+            params = (summary_type.name, start, end, self.__access_token)
       
         params_str = param_template.format(*params)
         
@@ -54,17 +73,25 @@ class OuraApiConnector(AbstractConnector):
       
         return resp
 
-    def get_summary(self, summary_type: str, date: str) -> Tuple[bool, dict]:
+
+    def get_summary(self, summary_type: SummaryType, date: str) -> Tuple[bool, dict]:
         """
         Requests the summary and checking for HTML errors.
         In case of no errors, returning the response as a dictionary.
-        Also returning whether the retrieval of the summary was succesful or not.
 
-        summary_type : str
+        Parameters
+        ----------
+        summary_type : SummaryType
             Indicating which summary should be retrieved from the API. 
 
         date : str
             The day the summary is wanted of. 
+
+        Returns
+        -------
+        Tuple
+            whether the retrieval was successful or not,
+            and the content of the retrieval as a dictionary    
         """
 
         resp = self.__request_summary(summary_type, date, date)
@@ -73,12 +100,14 @@ class OuraApiConnector(AbstractConnector):
         if not (200 <= status < 300):
             return False, dict()
 
-        content = OuraApiConnector.response_to_dict(resp)
-        uniform_content = OuraApiConnector.make_uniform(content)
+        content: dict = OuraApiConnector.response_to_dict(resp)
+        uniform_content: dict = OuraApiConnector.make_uniform(content)
 
-        summary_type = list(uniform_content.keys())[0]
-        list_of_contents = uniform_content[summary_type]
-        if len(list_of_contents) > 0: 
+        # if multiple dates would have been requested
+        # there would be multiple elemtends in this list
+        list_of_contents: List[dict] = uniform_content[summary_type.name]
+
+        if len(list_of_contents) == 1: 
             return True, list_of_contents[0]
 
         return False, dict()
@@ -86,6 +115,7 @@ class OuraApiConnector(AbstractConnector):
 
     @classmethod
     def response_to_dict(cls, response_obj: requests.Response) -> dict:
+        """ Transforming the response object into a dictionary """
         answer_dict = response_obj.json()
         answer_str = json.dumps(answer_dict)
         answer_json = json.loads(answer_str)
@@ -94,16 +124,26 @@ class OuraApiConnector(AbstractConnector):
 
     @classmethod
     def make_uniform(cls, resp_content: dict) -> dict:
-        summary_type = list(resp_content.keys())[0]
+        """ 
+        Changing the dictionary for the bedtime summary type
+        to make the response match the response format of the other summary types.
+        Nothing changes for other summary types.
+        """
+        summary_type_str = list(resp_content.keys())[0]
 
-        if summary_type == "ideal_bedtimes":
-            summary_type = BEDTIME
-            resp_content[summary_type] = resp_content.pop("ideal_bedtimes")
+        if summary_type_str == "ideal_bedtimes":
 
-            for i in range(len(resp_content[summary_type])):
-                current = resp_content[summary_type][i]
-                current['summary_date'] = current.pop('date')
+            # changing 'ideal_bedtime' key to 'bedtime'
+            summary_type_str = SummaryType.bedtime.name
+            resp_content[summary_type_str] = resp_content.pop("ideal_bedtimes")
 
+            for i in range(len(resp_content[summary_type_str])):
+                current = resp_content[summary_type_str][i]
+
+                # changing 'date' key to 'summary_date'
+                current[SUMMARY_DATE] = current.pop('date')
+
+                # moving the nested dictionary to two additional keys
                 bedtime_window_dict = current.pop('bedtime_window')
                 current['bedtime_window_start'] = bedtime_window_dict['start']
                 current['bedtime_window_end'] = bedtime_window_dict['end']

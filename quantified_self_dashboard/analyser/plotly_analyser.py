@@ -55,7 +55,7 @@ class PlotlyAnalyser(AbstractAnalyser):
         """
 
         # TODO: implementing switch-case-like structure for all different supported analysis types
-        self.__plot_multiple_of_same_unit(start, end, Periodicity.daily, [(SLEEP, "rmssd")])
+        self.__plot_multiple_of_same_unit(start, end, Periodicity.daily, [(SummaryType.sleep, "rmssd")])
 
 
     def __plot_multiple_of_same_unit(self, start: str, end: str, periodicity: Periodicity, summary_type_measurement_tuples: List[Tuple[str, str]], **kwargs):

@@ -1,5 +1,5 @@
 from connector.abstract_connector import AbstractConnector
-from common.constants import *
+from common.constants import SummaryType, SUMMARY_DATE
 
 
 class Summary:
@@ -58,23 +58,23 @@ class Summary:
 
 class Sleep(Summary):
     def __init__(self):
-        super().__init__(summary_type=SLEEP)
+        super().__init__(summary_type=SummaryType.sleep)
 
 
 class Readiness(Summary):
     def __init__(self):
-        super().__init__(summary_type=READINESS)
+        super().__init__(summary_type=SummaryType.readiness)
 
 
 class Activity(Summary):
     def __init__(self):
-        super().__init__(summary_type=ACTIVITY)
+        super().__init__(summary_type=SummaryType.activity)
 
 
 class Bedtime(Summary):
 
     def __init__(self):
-        super().__init__(summary_type=BEDTIME)
+        super().__init__(summary_type=SummaryType.bedtime)
 
 
 class Subjective(Summary):
@@ -82,7 +82,7 @@ class Subjective(Summary):
     subjective_tracking_types = [TYPE_BOOL, TYPE_NUMBER, TYPE_PERCENTAGE]
 
     def __init__(self):
-        super().__init__(summary_type=SUBJECTIVE)
+        super().__init__(summary_type=SummaryType.subjective)
 
     @classmethod
     def is_valid_subjective_input(cls, content, input_type):
@@ -102,14 +102,14 @@ class Subjective(Summary):
 
 
 
-def get_summary_class_from_str(summary_type):
+def get_summary_class_from_type(summary_type: SummaryType):
     
     str_to_class = {
-        SLEEP: Sleep,
-        READINESS: Readiness,
-        ACTIVITY: Activity,
-        BEDTIME: Bedtime,
-        SUBJECTIVE: Subjective
+        SummaryType.sleep: Sleep,
+        SummaryType.readiness: Readiness,
+        SummaryType.activity: Activity,
+        SummaryType.bedtime: Bedtime,
+        SummaryType.subjective: Subjective
     }
 
     return str_to_class[summary_type]
