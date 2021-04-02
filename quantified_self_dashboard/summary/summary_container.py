@@ -293,6 +293,8 @@ class SummaryContainer:
         summary_iter = iter(summaries)
 
         current_summary = next(summary_iter)
+        always_attribute_error = True
+
         for index, date in enumerate(dates):
             if current_summary.summary_date == date:
 
@@ -300,6 +302,7 @@ class SummaryContainer:
                 try:
                     value = getattr(current_summary, measurement_name)
                     values[index] = value
+                    always_attribute_error = False
                 except AttributeError:
                     pass
 
@@ -308,6 +311,9 @@ class SummaryContainer:
                     current_summary = next(summary_iter)
                 except StopIteration:
                     return values
+
+        if always_attribute_error:
+            raise AttributeError("No {}-{} avalable in summary objects".format(summary_type.name, measurement_name))
 
         return values
 
