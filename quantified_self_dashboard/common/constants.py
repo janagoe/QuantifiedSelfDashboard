@@ -48,6 +48,7 @@ Unit = Enum(
         ('score', 6),
         ('celsius', 7),
         ('raw_data', 8),
+        ('time_of_day', 9),
     ]
 )
 
@@ -61,6 +62,7 @@ UnitsAnnotationText = {
     Unit.score: "Score", 
     Unit.celsius: "°C", 
     Unit.raw_data: "Raw", 
+    Unit.time_of_day: "Time of Day", 
 }
 
 
@@ -69,14 +71,23 @@ UnitsAnnotationText = {
 AnalysisType = Enum(
     value = 'AnalysisType',
     names = [
-        ("test", 0)
+        ("test", 0),
+        ("scores_daily", 1),
+        ("bedtimes_daily", 2),
+        ("sleep_duration", 3),
+        ("sleep_durations", 4),
     ]
 )
 
 
+# SubjectiveMeasurementTypes ------------------------------
 
+SubjectiveMeasurementType = Enum(
+    value = 'SubjectiveMeasurementType',
+    names = [
+        ('bool', 0),
+        ('percentage', 1),
+        ('number', 2),
+    ]
+)
 
-# TODO: move into enum
-TYPE_BOOL = 'bool'
-TYPE_PERCENTAGE = 'percentage'
-TYPE_NUMBER = 'number'

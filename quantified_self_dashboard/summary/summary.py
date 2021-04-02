@@ -1,5 +1,5 @@
 from connector.abstract_connector import AbstractConnector
-from common.constants import SummaryType, SUMMARY_DATE
+from common.constants import SummaryType, SubjectiveMeasurementType, SUMMARY_DATE
 
 
 class Summary:
@@ -79,7 +79,7 @@ class Bedtime(Summary):
 
 class Subjective(Summary):
 
-    subjective_tracking_types = [TYPE_BOOL, TYPE_NUMBER, TYPE_PERCENTAGE]
+    subjective_tracking_types = [SubjectiveMeasurementType.bool, SubjectiveMeasurementType.percentage, SubjectiveMeasurementType.number]
 
     def __init__(self):
         super().__init__(summary_type=SummaryType.subjective)
@@ -89,15 +89,15 @@ class Subjective(Summary):
         if input_type not in cls.__subjective_tracking_types:
             return False
 
-        if input_type == TYPE_BOOL:
+        if input_type == SubjectiveMeasurementType.bool:
             return content.__class__ == bool
 
-        if input_type == TYPE_PERCENTAGE:
+        if input_type == SubjectiveMeasurementType.percentage:
             correct_type = content.__class__ in [int, float]    
             within_range = 0 <= content <= 100
             return correct_type and within_range
 
-        if input_type == TYPE_NUMBER:
+        if input_type == SubjectiveMeasurementType.number:
             return content.__class__ in [int, float]    
 
 

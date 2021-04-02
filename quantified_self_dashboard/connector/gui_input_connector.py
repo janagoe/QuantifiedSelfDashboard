@@ -1,7 +1,7 @@
 import random 
 from typing import Tuple, List
 
-from common.constants import SummaryType, SUMMARY_DATE
+from common.constants import SummaryType, SubjectiveMeasurementType, SUMMARY_DATE
 from connector.abstract_connector import AbstractConnector
 from summary.summary import Subjective
 
@@ -15,7 +15,9 @@ class GuiInputConnector(AbstractConnector):
 
         self.__subjective_tracking_attr_types = dict()
         self.__subjective_tracking_attributes = []
-        for attr_name, attr_type in subjective_tracking_items:
+        for attr_name, attr_type_str in subjective_tracking_items:
+
+            attr_type = SubjectiveMeasurementType[attr_type_str]
 
             # must be a valid type
             if attr_type in Subjective.subjective_tracking_types:
@@ -47,11 +49,11 @@ class GuiInputConnector(AbstractConnector):
         data = dict()
         for attr in self.__subjective_tracking_attributes:
             attr_type = self.__subjective_tracking_attr_types[attr]
-            if attr_type == TYPE_BOOL:
+            if attr_type == SubjectiveMeasurementType.bool:
                 value = random.choice([True, False])
-            elif attr_type == TYPE_NUMBER:
+            elif attr_type == SubjectiveMeasurementType.number:
                 value = random.randrange(1000) - 500
-            elif attr_type == TYPE_PERCENTAGE:
+            elif attr_type == SubjectiveMeasurementType.percentage:
                 value = random.randrange(101)
             data[attr] = value
 
