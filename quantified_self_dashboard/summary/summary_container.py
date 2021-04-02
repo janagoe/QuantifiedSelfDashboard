@@ -2,7 +2,7 @@ from typing import List, Union
 
 import numpy as np
 
-from summary.summary import get_summary_class_from_type
+from summary.summary import Summary, get_summary_class_from_type
 from common.constants import SummaryType, SUMMARY_DATE
 from common.date_helper import all_date_strings_between_dates, is_date_within_range
 from connector.abstract_connector import AbstractConnector
@@ -260,7 +260,7 @@ class SummaryContainer:
         return bundle
 
 
-    def get_dict_of_bundles(self) -> dict[int, dict]
+    def get_dict_of_bundles(self) -> dict[int, dict]:
         """
         Building and returning a dictionary which is containing dictionaries for each date. 
         Each inner dictionarys keys are the attributes of all summary objects.
@@ -274,7 +274,8 @@ class SummaryContainer:
         return data
 
 
-    def get_np_array(self, start: str, end: str, summary_type: SummaryType, measurement_name: str) -> np.array:
+
+    def get_values(self, start: str, end: str, summary_type: SummaryType, measurement_name: str, output_as_np_array=True) -> Union[np.array, List]:
         """
         Creating a one dimensional numpy array with one entry for each date from start to end.
         The array is containing the values of the given summary type and measurement.
@@ -282,8 +283,11 @@ class SummaryContainer:
         """
 
         dates = all_date_strings_between_dates(start, end)
-        value_array = np.empty(len(dates))
-        value_array[:] = np.NaN
+        if output_as_np_array:
+            values = np.empty(len(dates))
+            values[:] = np.NaN
+        else: # output as python list
+            values = [None] * len(dates)
 
         summaries = self.get_summaries_within_timerange(summary_type, start, end)
         summary_iter = iter(summaries)
@@ -291,12 +295,19 @@ class SummaryContainer:
         current_summary = next(summary_iter)
         for index, date in enumerate(dates):
             if current_summary.summary_date == date:
-                value = getattr(current_summary, measurement_name)
-                value_array[index] = value
+
+                # value might not be available for that date
+                try:
+                    value = getattr(current_summary, measurement_name)
+                    values[index] = value
+                except AttributeError:
+                    pass
+
+                # iterator might be at end
                 try:
                     current_summary = next(summary_iter)
                 except StopIteration:
-                    return value_array
+                    return values
 
-        return value_array
+        return values
 

@@ -39,6 +39,8 @@ class CsvStorageConnector(AbstractConnector):
             self.__data = pd.read_csv(self._filename, sep=self.__delimiter)
         except IOError:
             raise ValueError("Could not open file. Please close it first.")
+        except pd.errors.EmptyDataError:
+            self.__data = pd.DataFrame()
 
 
     def get_summary(self, summary_type: SummaryType, date: str) -> Tuple[bool, dict]:
@@ -69,12 +71,14 @@ class CsvStorageConnector(AbstractConnector):
         summary_type_column_identifier_re = r'{}_.*'.format(summary_type.name)
         summary_type_suffix_re = r'{}_'.format(summary_type.name)
 
-        # searching for the date row in the DataFrame
-        date_entry = self.__data.loc[self.__data[SUMMARY_DATE] == date]
-        if len(date_entry) == 0:
+        try:
+            # searching for the date row in the DataFrame
+            date_entry = self.__data.loc[self.__data[SUMMARY_DATE] == date]
+        except KeyError:
             # date is not in the DataFrame
             return False, dict()
-        elif len(date_entry) > 1:
+
+        if len(date_entry) > 1:
             raise AttributeError("Invalid File Content. Too many date entries in one file.")
 
         # filtering out columns relevant for this summary type

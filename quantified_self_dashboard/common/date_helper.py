@@ -75,3 +75,9 @@ def is_date_before_another_date(date, another_date):
 
     return d1 < d2
 
+def get_day_before(date):
+    d1 = simple_string_to_datetime(start)
+    d2 = d1 - timedelta(days=1)
+    return datetime_to_simple_iso(d1)
+
+    
