@@ -1,9 +1,36 @@
+import math
+import datetime
 from typing import Callable
 from common.constants import *
 
 
 identity = lambda x: x
 seconds_to_hours = lambda x: x / 3600 
+
+seconds_to_hours_in_relation_to_midnight = lambda x: 24 + seconds_to_hours(x)
+
+
+def seconds_to_datetime(x):
+    time_in_hours = seconds_to_hours(x)
+    return time_to_datetime(time_in_hours)
+
+
+def seconds_to_datetime_in_relation_to_midnight(x):
+    time_in_hours = seconds_to_hours_in_relation_to_midnight(x)
+    return time_to_datetime(time_in_hours)
+
+
+def time_to_datetime(x):
+
+    hours = math.floor(x)
+    minutes = math.floor( (x - hours) * 60 )
+
+    if hours >= 24:
+        hours -= 24
+
+    datetime_obj = datetime.time(hours, minutes, 0)
+    return datetime_obj
+
 
 
 # attribute_name: [display_transform x->x, original_type, transformed_type, original_unit: str, transformed_unit: str, title: str]
@@ -16,20 +43,20 @@ sleep_transform = {
     "deep": [seconds_to_hours, int, float, Unit.seconds, Unit.hours, "Deep Sleep Time"],
     "duration": [seconds_to_hours, int, float, Unit.seconds, Unit.hours, "Sleep Duration"],
 
-    "bedtime_end_delta": [seconds_to_hours, int, float, Unit.seconds, Unit.hours, "Bedtime End Delta"],
-    "bedtime_start_delta": [seconds_to_hours, int, float, Unit.seconds, Unit.hours, "Bedtime Start Delta"],
-    "midpoint_at_delta": [seconds_to_hours, int, float, Unit.seconds, Unit.hours, "Sleep Mitpoint Delta"],
-    "midpoint_time": [seconds_to_hours, int, float, Unit.seconds, Unit.hours, "Sleep Mindpoint"],
+    "bedtime_end_delta": [seconds_to_datetime, int, datetime.time, Unit.seconds, Unit.time_of_day, "End of Sleep Period"],
+    "bedtime_start_delta": [seconds_to_datetime_in_relation_to_midnight, int, datetime.time, Unit.seconds, Unit.time_of_day, "Start of Sleep Period"],
+    "midpoint_at_delta": [seconds_to_datetime, int, datetime.time, Unit.seconds, Unit.time_of_day, "Sleep Midpoint Delta"],
+    "midpoint_time": [seconds_to_datetime, int, datetime.time, Unit.seconds, Unit.time_of_day, "Sleep Mindpoint"],
 
     "efficiency": [identity, int, int, Unit.score, Unit.score, "Sleep Efficiency"],
-    "score": [identity, int, int, Unit.score, Unit.score, "Sleep Unit.score"],
-    "score_alignment": [identity, int, int, Unit.score, Unit.score, "Sleep Unit.score Alignment"],
-    "score_deep": [identity, int, int, Unit.score, Unit.score, "Deep Sleep Unit.score"],
-    "score_disturbances": [identity, int, int, Unit.score, Unit.score, "Sleep Disturbances Unit.score"],
-    "score_efficiency": [identity, int, int, Unit.score, Unit.score, "Sleep Efficiency Unit.score"],
-    "score_latency": [identity, int, int, Unit.score, Unit.score, "Sleep Latency Unit.score"],
-    "score_rem": [identity, int, int, Unit.score, Unit.score, "REM Sleep Unit.score"],
-    "score_total": [identity, int, int, Unit.score, Unit.score, "Total Sleep Unit.score"],
+    "score": [identity, int, int, Unit.score, Unit.score, "Sleep Score"],
+    "score_alignment": [identity, int, int, Unit.score, Unit.score, "Sleep Score Alignment"],
+    "score_deep": [identity, int, int, Unit.score, Unit.score, "Deep Sleep Score"],
+    "score_disturbances": [identity, int, int, Unit.score, Unit.score, "Sleep Disturbances Score"],
+    "score_efficiency": [identity, int, int, Unit.score, Unit.score, "Sleep Efficiency Score"],
+    "score_latency": [identity, int, int, Unit.score, Unit.score, "Sleep Latency Score"],
+    "score_rem": [identity, int, int, Unit.score, Unit.score, "REM Sleep Score"],
+    "score_total": [identity, int, int, Unit.score, Unit.score, "Total Sleep Score"],
 
     "rmssd": [identity, int, int, Unit.raw_data, Unit.raw_data, "RMSSD"],
     "hr_average": [identity, float, float, Unit.raw_data, Unit.raw_data, "Average Heart Rate"],
@@ -37,12 +64,48 @@ sleep_transform = {
     "temperature_delta": [identity, int, int, Unit.celsius, Unit.celsius, "Temperature Delta"],
     "temperature_deviation": [identity, int, int, Unit.celsius, Unit.celsius, "Temperature Deviation"],
     "temperature_trend_deviation": [identity, int, int, Unit.raw_data, Unit.raw_data, "Temperature Trend Deviation"],
+    "breath_average": [identity, float, float, Unit.raw_data, Unit.raw_data, "Breath Average"],
 
 }
 
-readiness_transform = dict()
-activity_transform = dict()
-bedtime_transform = dict()
+readiness_transform = {
+
+    "score": [identity, int, int, Unit.score, Unit.score, "Readiness Score"],
+    "score_activity_balance": [identity, int, int, Unit.score, Unit.score, "Activity Balance Score"],
+    "score_hrv_balance": [identity, int, int, Unit.score, Unit.score, "Heart Rate Variability Balance Score"],
+    "score_previous_day": [identity, int, int, Unit.score, Unit.score, "Previous Day Readiness Score"],
+    "score_previous_night": [identity, int, int, Unit.score, Unit.score, "Previous Night Sleep Score"],
+    "score_recovery_index": [identity, int, int, Unit.score, Unit.score, "Recovery Index Score"],
+    "score_resting_hr": [identity, int, int, Unit.score, Unit.score, "Resting Heart Rate Score"],
+    "score_sleep_balance": [identity, int, int, Unit.score, Unit.score, "Sleep Balance Score"],
+    "score_temperature": [identity, int, int, Unit.score, Unit.score, "Temperature Score"],
+
+}
+
+
+activity_transform = {
+
+    "score": [identity, int, int, Unit.score, Unit.score, "Activity Score"],
+    "average_met": [identity, float, float, Unit.raw_data, Unit.raw_data, "Average MET"],
+    "cal_active": [identity, int, int, Unit.raw_data, Unit.raw_data, "Active Cal"],
+    "cal_total": [identity, int, int, Unit.raw_data, Unit.raw_data, "Total Cal"],
+    "daily_movement": [identity, int, int, Unit.raw_data, Unit.raw_data, "Daily Steps"],
+    "high": [identity, int, int, Unit.raw_data, Unit.raw_data, "High Activity"],
+    "inactive": [identity, int, int, Unit.raw_data, Unit.raw_data, "Inactive"],
+    "low": [identity, int, int, Unit.raw_data, Unit.raw_data, "Low Activity"],
+    "medium": [identity, int, int, Unit.raw_data, Unit.raw_data, "Medium Activity"],
+    "inactivity_alerts": [identity, int, int, Unit.raw_data, Unit.raw_data, "Inactivity Alterts"],
+
+}
+
+
+bedtime_transform = {
+    "bedtime_window_start": [seconds_to_datetime_in_relation_to_midnight, int, datetime.time, Unit.seconds, Unit.time_of_day, "Bedtime Window Start Time"],
+    "bedtime_window_end": [seconds_to_datetime_in_relation_to_midnight, int, datetime.time, Unit.seconds, Unit.time_of_day, "Bedtime Window End Time"],
+}
+
+
+
 subjective_transform = dict()
 
 
