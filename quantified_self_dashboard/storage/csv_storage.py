@@ -51,6 +51,7 @@ class CsvStorage(AbstractStorage):
         # TODO: check this
         combined_data.loc[:,~combined_data.columns.str.match(r'Unnamed.*')]
 
+        # TODO: add try catch
         combined_data.to_csv(self._filename, sep=self.__delimiter)
 
         

@@ -5,9 +5,9 @@ from common.constants import *
 
 
 identity = lambda x: x
-seconds_to_hours = lambda x: x / 3600 
+seconds_to_hours = lambda x: x / 3600 if x else None 
 
-seconds_to_hours_in_relation_to_midnight = lambda x: 24 + seconds_to_hours(x)
+seconds_to_hours_in_relation_to_midnight = lambda x: 24 + seconds_to_hours(x) if x else None
 
 
 def seconds_to_datetime(x):
@@ -36,49 +36,54 @@ def time_to_datetime(x):
 # attribute_name: [display_transform x->x, original_type, transformed_type, original_unit: str, transformed_unit: str, title: str]
 sleep_transform = {
 
-    "total": [seconds_to_hours, int, float, Unit.seconds, Unit.hours, "Total Sleep Time", False],
-    "awake": [seconds_to_hours, int, float, Unit.seconds, Unit.hours, "Awake Sleep Time", False],
-    "rem": [seconds_to_hours, int, float, Unit.seconds, Unit.hours, "REM Sleep Time", False],
-    "light": [seconds_to_hours, int, float, Unit.seconds, Unit.hours, "Light Sleep Time", False],
-    "deep": [seconds_to_hours, int, float, Unit.seconds, Unit.hours, "Deep Sleep Time", False],
-    "duration": [seconds_to_hours, int, float, Unit.seconds, Unit.hours, "Sleep Duration", False],
+    "total": [seconds_to_hours, int, float, Unit.seconds, Unit.hours, "Total Sleep Time", True],
+    "awake": [seconds_to_hours, int, float, Unit.seconds, Unit.hours, "Awake Sleep Time", True],
+    "rem": [seconds_to_hours, int, float, Unit.seconds, Unit.hours, "REM Sleep Time", True],
+    "light": [seconds_to_hours, int, float, Unit.seconds, Unit.hours, "Light Sleep Time", True],
+    "deep": [seconds_to_hours, int, float, Unit.seconds, Unit.hours, "Deep Sleep Time", True],
+    "duration": [seconds_to_hours, int, float, Unit.seconds, Unit.hours, "Sleep Duration", True],
 
-    "bedtime_end_delta": [seconds_to_datetime, int, datetime.time, Unit.seconds, Unit.time_of_day, "End of Sleep Period", False],
-    "bedtime_start_delta": [seconds_to_datetime_in_relation_to_midnight, int, datetime.time, Unit.seconds, Unit.time_of_day, "Start of Sleep Period", False],
-    "midpoint_at_delta": [seconds_to_datetime, int, datetime.time, Unit.seconds, Unit.time_of_day, "Sleep Midpoint Delta", False],
-    "midpoint_time": [seconds_to_datetime, int, datetime.time, Unit.seconds, Unit.time_of_day, "Sleep Mindpoint", False],
+    "bedtime_end_delta": [seconds_to_hours, int, datetime.time, Unit.seconds, Unit.time_of_day, "End of Sleep Period", True],
+    "bedtime_start_delta": [seconds_to_hours_in_relation_to_midnight, int, datetime.time, Unit.seconds, Unit.time_of_day, "Start of Sleep Period", True],
+    "midpoint_at_delta": [seconds_to_hours, int, datetime.time, Unit.seconds, Unit.time_of_day, "Sleep Midpoint Delta", True],
+    "midpoint_time": [seconds_to_hours, int, datetime.time, Unit.seconds, Unit.time_of_day, "Sleep Mindpoint", True],
 
-    "efficiency": [identity, int, int, Unit.score, Unit.score, "Sleep Efficiency", False],
-    "score": [identity, int, int, Unit.score, Unit.score, "Sleep Score", False],
-    "score_alignment": [identity, int, int, Unit.score, Unit.score, "Sleep Score Alignment", False],
-    "score_deep": [identity, int, int, Unit.score, Unit.score, "Deep Sleep Score", False],
-    "score_disturbances": [identity, int, int, Unit.score, Unit.score, "Sleep Disturbances Score", False],
-    "score_efficiency": [identity, int, int, Unit.score, Unit.score, "Sleep Efficiency Score", False],
-    "score_latency": [identity, int, int, Unit.score, Unit.score, "Sleep Latency Score", False],
-    "score_rem": [identity, int, int, Unit.score, Unit.score, "REM Sleep Score", False],
-    "score_total": [identity, int, int, Unit.score, Unit.score, "Total Sleep Score", False],
+    # "bedtime_end_delta": [seconds_to_datetime, int, datetime.time, Unit.seconds, Unit.time_of_day, "End of Sleep Period", True],
+    # "bedtime_start_delta": [seconds_to_datetime_in_relation_to_midnight, int, datetime.time, Unit.seconds, Unit.time_of_day, "Start of Sleep Period", True],
+    # "midpoint_at_delta": [seconds_to_datetime, int, datetime.time, Unit.seconds, Unit.time_of_day, "Sleep Midpoint Delta", True],
+    # "midpoint_time": [seconds_to_datetime, int, datetime.time, Unit.seconds, Unit.time_of_day, "Sleep Mindpoint", True],
 
-    "rmssd": [identity, int, int, Unit.raw_data, Unit.raw_data, "RMSSD", False],
-    "hr_average": [identity, float, float, Unit.raw_data, Unit.raw_data, "Average Heart Rate", False],
-    "hr_lowest": [identity, int, int, Unit.raw_data, Unit.raw_data, "Lowest Heart Rate", False],
-    "temperature_delta": [identity, int, int, Unit.celsius, Unit.celsius, "Temperature Delta", False],
-    "temperature_deviation": [identity, int, int, Unit.celsius, Unit.celsius, "Temperature Deviation", False],
-    "temperature_trend_deviation": [identity, int, int, Unit.raw_data, Unit.raw_data, "Temperature Trend Deviation", False],
-    "breath_average": [identity, float, float, Unit.raw_data, Unit.raw_data, "Breath Average", False],
+    "efficiency": [identity, int, int, Unit.score, Unit.score, "Sleep Efficiency", True],
+    "score": [identity, int, int, Unit.score, Unit.score, "Sleep Score", True],
+    "score_alignment": [identity, int, int, Unit.score, Unit.score, "Sleep Score Alignment", True],
+    "score_deep": [identity, int, int, Unit.score, Unit.score, "Deep Sleep Score", True],
+    "score_disturbances": [identity, int, int, Unit.score, Unit.score, "Sleep Disturbances Score", True],
+    "score_efficiency": [identity, int, int, Unit.score, Unit.score, "Sleep Efficiency Score", True],
+    "score_latency": [identity, int, int, Unit.score, Unit.score, "Sleep Latency Score", True],
+    "score_rem": [identity, int, int, Unit.score, Unit.score, "REM Sleep Score", True],
+    "score_total": [identity, int, int, Unit.score, Unit.score, "Total Sleep Score", True],
+
+    "rmssd": [identity, int, int, Unit.raw_data, Unit.raw_data, "RMSSD", True],
+    "hr_average": [identity, float, float, Unit.raw_data, Unit.raw_data, "Average Heart Rate", True],
+    "hr_lowest": [identity, int, int, Unit.raw_data, Unit.raw_data, "Lowest Heart Rate", True],
+    "temperature_delta": [identity, int, int, Unit.celsius, Unit.celsius, "Temperature Delta", True],
+    "temperature_deviation": [identity, int, int, Unit.celsius, Unit.celsius, "Temperature Deviation", True],
+    "temperature_trend_deviation": [identity, int, int, Unit.raw_data, Unit.raw_data, "Temperature Trend Deviation", True],
+    "breath_average": [identity, float, float, Unit.raw_data, Unit.raw_data, "Breath Average", True],
 
 }
 
 readiness_transform = {
 
-    "score": [identity, int, int, Unit.score, Unit.score, "Readiness Score", False],
-    "score_activity_balance": [identity, int, int, Unit.score, Unit.score, "Activity Balance Score", False],
-    "score_hrv_balance": [identity, int, int, Unit.score, Unit.score, "Heart Rate Variability Balance Score", False],
-    "score_previous_day": [identity, int, int, Unit.score, Unit.score, "Previous Day Readiness Score", False],
-    "score_previous_night": [identity, int, int, Unit.score, Unit.score, "Previous Night Sleep Score", False],
-    "score_recovery_index": [identity, int, int, Unit.score, Unit.score, "Recovery Index Score", False],
-    "score_resting_hr": [identity, int, int, Unit.score, Unit.score, "Resting Heart Rate Score", False],
-    "score_sleep_balance": [identity, int, int, Unit.score, Unit.score, "Sleep Balance Score", False],
-    "score_temperature": [identity, int, int, Unit.score, Unit.score, "Temperature Score", False],
+    "score": [identity, int, int, Unit.score, Unit.score, "Readiness Score", True],
+    "score_activity_balance": [identity, int, int, Unit.score, Unit.score, "Activity Balance Score", True],
+    "score_hrv_balance": [identity, int, int, Unit.score, Unit.score, "Heart Rate Variability Balance Score", True],
+    "score_previous_day": [identity, int, int, Unit.score, Unit.score, "Previous Day Readiness Score", True],
+    "score_previous_night": [identity, int, int, Unit.score, Unit.score, "Previous Night Sleep Score", True],
+    "score_recovery_index": [identity, int, int, Unit.score, Unit.score, "Recovery Index Score", True],
+    "score_resting_hr": [identity, int, int, Unit.score, Unit.score, "Resting Heart Rate Score", True],
+    "score_sleep_balance": [identity, int, int, Unit.score, Unit.score, "Sleep Balance Score", True],
+    "score_temperature": [identity, int, int, Unit.score, Unit.score, "Temperature Score", True],
 
 }
 

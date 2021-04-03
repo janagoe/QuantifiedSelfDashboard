@@ -112,7 +112,7 @@ class AbstractPlotter(AbstractAnalyser):
 
 
         # retrieving the data as a np.array or list
-        data_as_np_array = (trans_unit != Unit.time_of_day)
+        data_as_np_array = True # might need to be changed later
         if data_as_np_array:
             raw_data = self._container.get_values(start, end, summary_type, measurement_name)
             vfunc = np.vectorize(trans_func)

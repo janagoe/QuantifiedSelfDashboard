@@ -5,6 +5,7 @@ from summary.summary import *
 from summary.summary_container import SummaryContainer
 from connector import oura_api_connector, gui_input_connector, csv_storage_connector
 from common.date_helper import *
+from common.constants import *
 from storage.csv_storage import CsvStorage
 from analyser import abstract_analyser, plotly_analyser
 
@@ -27,14 +28,21 @@ if __name__ == '__main__':
     conn_oura = oura_api_connector.OuraApiConnector(access_token)
     conn_sub = gui_input_connector.GuiInputConnector(subjective_tracking_items)
     conn_storage = csv_storage_connector.CsvStorageConnector(storage_file_path)
-    connectors = [conn_storage, conn_oura, conn_sub]
+    # connectors = [conn_storage, conn_oura, conn_sub]
+    connectors = [conn_oura, conn_sub]
 
-    container = SummaryContainer(containing_subjective=False)
-    container.load(connectors, "2021-03-01", "2021-03-20")
+    start, end = "2021-03-01", "2021-04-02"
 
-    # storage = CsvStorage(storage_file_path)
-    # storage.save(container)
+    container = SummaryContainer(containing_sleep=True, containing_readiness=True, containing_activity=True, containing_bedtime=True)
+    container.load(connectors, get_day_before(start), end)
+
+    storage = CsvStorage(storage_file_path)
+    storage.save(container)
 
     analyser = plotly_analyser.PlotlyAnalyser(output_location, container)
-    analyser.analyse("2021-03-01", "2021-03-20", Periodicity.daily, "test")
-    print()
+    analyser.analyse(start, end, Periodicity.daily, AnalysisType.sleep_score_distribution)
+    analyser.analyse(start, end, Periodicity.daily, AnalysisType.readiness_score_distribution)
+    analyser.analyse(start, end, Periodicity.daily, AnalysisType.activity_score_distribution)
+    analyser.analyse(start, end, Periodicity.daily, AnalysisType.scores_daily)
+    analyser.analyse(start, end, Periodicity.daily, AnalysisType.bedtimes_daily)
+    analyser.analyse(start, end, Periodicity.daily, AnalysisType.sleep_durations)
