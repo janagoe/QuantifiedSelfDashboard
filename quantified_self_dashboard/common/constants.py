@@ -30,7 +30,7 @@ Periodicity = Enum(
         ('weekly', 1),
         ('monthly', 2),
         ('yearly', 3),
-        ('weekday_averages', 4)
+        ('weekdays', 4)
     ]
 )
 

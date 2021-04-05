@@ -7,7 +7,8 @@ import numpy as np
 
 from summary.summary_container import SummaryContainer
 from common.constants import *
-from common.date_helper import all_date_strings_between_dates, get_day_before
+from common.date_helper import *
+# from common.date_helper import all_date_strings_between_dates, get_day_before
 from analyser.abstract_analyser import AbstractAnalyser
 from analyser.transform_measurements import *
 
@@ -116,31 +117,100 @@ class AbstractPlotter(AbstractAnalyser):
         if data_as_np_array:
             raw_data = self._container.get_values(start, end, summary_type, measurement_name)
             vfunc = np.vectorize(trans_func)
-            plot_data = vfunc(raw_data)
+            daily_plot_data = vfunc(raw_data)
         else:
             # datetime values and strings cannot be stored in normal np arrays
             # using python lists instead
             raw_data = self._container.get_values(start, end, summary_type, measurement_name, output_as_np_array=False)
-            plot_data = list(map( trans_func, raw_data ))
+            daily_plot_data = list(map( trans_func, raw_data ))
 
+
+        # only if transformed data is a number
+        # and plot_data is a numby array
 
         # averaging depending on teh given periodicty
+        
         if periodicity == Periodicity.daily:
-            pass
-        elif periodicity == Periodicity.weekly:
-            raise NotImplementedError()
-        elif periodicity == Periodicity.monthly:
-            raise NotImplementedError()
-        elif periodicity == Periodicity.weekday_averages:
-            raise NotImplementedError()
-        elif periodicity == Periodicity.yearly:
-            raise NotImplementedError()
-        # TODO: weekly, monthly and yearly averaging
-
-
+            plot_data = daily_plot_data
+        else:
+            plot_data = self.__transform_daily_values_to_averaged_by_periodictiy(start, end, periodicity, daily_plot_data)
+        
         return plot_data, measurement_title, trans_unit
 
 
+    def __transform_daily_values_to_averaged_by_periodictiy(self, start: str, end: str, periodicity: Periodicity, daily_data: Union[np.array, List]) -> np.array:
+        """
+        Averaging the daily values into averaged values depending on the periodicity.
+        For e.g. the weekly periodicity the values of each week get averaged into one value.
+
+        Parameters
+        ----------
+        start : str
+            Analysis start date in YYYY-MM-DD format.
+
+        end : str
+            Analysis end date in YYYY-MM-DD format.
+
+        periodicity : Periodicity
+            Which timeframes must be considered. Periodicity.daily may not be called here.
+
+        daily_data : Union[np.array, List]
+            Raw daily data.
+
+        Returns
+        --------
+        np.array 
+            of the averaged values
+        """
+
+        if periodicity == Periodicity.daily:
+            raise AttributeError()
+
+        dates = all_date_strings_between_dates(start, end)
+
+        # defining functions to transform datetime objects into unique identifiers 
+        # and so sort those chronologically
+        if periodicity == Periodicity.weekly:
+            date_obj_to_identifier_func = lambda date_obj: (date_obj.year, date_obj.isocalendar()[1])
+            identifier_sorting = lambda identifier: identifier[0] * 100 + identifier[1] 
+        elif periodicity == Periodicity.monthly:
+            date_obj_to_identifier_func = lambda date_obj: (date_obj.year, date_obj.month)
+            identifier_sorting = lambda identifier: identifier[0] * 100 + identifier[1] 
+        elif periodicity == Periodicity.weekdays:
+            date_obj_to_identifier_func = lambda date_obj: date_obj.isocalendar()[2]
+            identifier_sorting = lambda identifier: identifier 
+        elif periodicity == Periodicity.yearly:
+            date_obj_to_identifier_func = lambda date_obj: date_obj.year
+            identifier_sorting = lambda identifier: identifier 
+
+        # partioning by week
+        buckets = dict()
+        for index, date_str in enumerate(dates):
+            date_obj = simple_string_to_datetime(date_str)
+            identifier = date_obj_to_identifier_func(date_obj)
+
+            if identifier not in buckets.keys():
+                buckets[identifier] = []
+            
+            day_value = daily_data[index]
+            buckets[identifier].append(day_value)
+
+        # averaging daily values into one weekly value
+        averaged_values = dict()
+        for identifier, daily_values in buckets.items():
+            averaged_value = np.average(daily_values)
+            averaged_values[identifier] = averaged_value
+
+        # transforming dict into list in chronological order
+        weekly_data = np.zeros(len(averaged_values.keys()))
+        mapped_averaged_value_tuples = map(lambda k: (identifier_sorting(k), averaged_values[k]), averaged_values.keys())
+        sorted_averaged_value_tuples = sorted(mapped_averaged_value_tuples, key=lambda s: s[0])
+        average_values_sorted_by_identifiers = list(map(lambda t: t[1], sorted_averaged_value_tuples))
+        
+        return np.asarray(average_values_sorted_by_identifiers)
+
+
+    
 
 
 
