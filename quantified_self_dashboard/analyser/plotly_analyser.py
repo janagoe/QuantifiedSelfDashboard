@@ -14,6 +14,8 @@ from common.constants import *
 from common.date_helper import all_date_strings_between_dates
 from analyser.abstract_plotter import AbstractPlotter
 from analyser.transform_measurements import *
+from analyser.analysis_type_configurations import *
+
 
 
 class PlotlyAnalyser(AbstractPlotter):
@@ -31,7 +33,7 @@ class PlotlyAnalyser(AbstractPlotter):
     ]
 
 
-    def _analyse(self, start: str, end: str, periodicity: Periodicity, analysis_type: AnalysisType, *args):
+    def _analyse(self, start: str, end: str, analysis_type: AnalysisType, *args):
         """
         Implementation of this analyser classes analysis.
 
@@ -51,42 +53,44 @@ class PlotlyAnalyser(AbstractPlotter):
             analysis types of this Analyser Class.
         """
 
-        if analysis_type == AnalysisType.scores_daily:
-            summary_type_measurement_tuples = [(SummaryType.sleep, "score"), (SummaryType.readiness, "score"), (SummaryType.activity, "score")]
-            title = "Daily Scores"
-            output_file_name = "daily_scores_{}_{}".format(start, end)
-            self.__line_plot_multiple_of_same_unit(start, end, Periodicity.daily, summary_type_measurement_tuples, title=title, output_file_name=output_file_name, yaxis_to_zero=True)
+        # summary_type_measurement_tuples
+        if analysis_type not in analysis_type_summary_type_measurement_tuples.keys():
+            raise AttributeError()
+        summary_type_measurement_tuples = analysis_type_summary_type_measurement_tuples[analysis_type]
+
+        # peridicity
+        if analysis_type in analysis_type_periodicity.keys():
+            periodicity = analysis_type_periodicity[analysis_type]
+        else:
+            periodicity = default_periodicity
+
+        # plot type
+        if analysis_type in analysis_type_plot_type.keys():
+            plot_type = analysis_type_plot_type[analysis_type]
+        else:
+            plot_type = default_plot_type
+
+        # output file name
+        output_file_name = "{}_{}_{}_{}".format(analysis_type.name, periodicity.name, start, end)
+
+        # title
+        if analysis_type in analysis_type_plot_titles_template.keys():
+            title = analysis_type_plot_titles_template[analysis_type].format(start, end)
+        else:
+            periodicity_str = periodicity.name.title()
+            analysis_type_str = analysis_type.name.title()
+            title = "{} {} from {} until {}".format(periodicity_str, analysis_type_str, start, end)
+
+        # kwargs
+        if analysis_type in analysis_type_plot_kwargs:
+            kwargs = analysis_type_plot_kwargs[analysis_type]
+        else:
+            kwargs = dict()
+        kwargs['title'] = title
+        kwargs['output_file_name'] = output_file_name
 
 
-        elif analysis_type == AnalysisType.sleep_durations:
-            summary_type_measurement_tuples = [(SummaryType.sleep, "deep"), (SummaryType.sleep, "rem"), (SummaryType.sleep, "light"), (SummaryType.sleep, "awake")]
-            title = "Sleep Times"
-            output_file_name = "daily_sleep_times_{}_{}".format(start, end)
-            self.__bar_plot_multiple_of_same_unit(start, end, Periodicity.daily, summary_type_measurement_tuples, title=title, output_file_name=output_file_name, yaxis_to_zero=True)
-
-
-        elif analysis_type == AnalysisType.sleep_score_distribution:
-            title = "Sleep Score Distribution from {} until {}".format(start, end)
-            output_file_name = "sleep_score_distribution_{}_{}".format(start, end)
-            self.__histogram_plot_multiple_of_same_unit(start, end, Periodicity.daily, [(SummaryType.sleep, "score")], title=title, output_file_name=output_file_name)
-
-
-        elif analysis_type == AnalysisType.readiness_score_distribution:
-            title = "Readiness Score Distribution from {} until {}".format(start, end)
-            output_file_name = "readiness_score_distribution_{}_{}".format(start, end)
-            self.__histogram_plot_multiple_of_same_unit(start, end, Periodicity.daily, [(SummaryType.readiness, "score")], title=title, output_file_name=output_file_name)
-
-
-        elif analysis_type == AnalysisType.activity_score_distribution:
-            title = "Activity Score Distribution from {} until {}".format(start, end)
-            output_file_name = "activity_score_distribution_{}_{}".format(start, end)
-            self.__histogram_plot_multiple_of_same_unit(start, end, Periodicity.daily, [(SummaryType.activity, "score")], title=title, output_file_name=output_file_name)
-
-
-        elif analysis_type == AnalysisType.bedtimes_daily:
-            title = "Daily Bedtimes from {} until {}".format(start, end)
-            output_file_name = "daily_bedtimes_{}_{}".format(start, end)
-            self.__bedtimes_plot(start, end, Periodicity.daily, [(SummaryType.sleep, "bedtime_start_delta"), (SummaryType.sleep, "duration")], title=title, output_file_name=output_file_name)
+        self.__create_plot(start, end, periodicity, summary_type_measurement_tuples, plot_type, **kwargs)
 
 
     def __save(self, fig, file_name):
@@ -95,23 +99,55 @@ class PlotlyAnalyser(AbstractPlotter):
         fig.write_image(path_name)
 
 
-    def __bedtimes_plot(self, start: str, end: str, periodicity: Periodicity, summary_type_measurement_tuples: List[Tuple[str, str]], **kwargs):
-        
+    def __create_plot(self, start: str, end: str, periodicity: Periodicity, summary_type_measurement_tuples: List[Tuple[str, str]], plot_type: PlotType, **kwargs):
+
         dates, plot_data_sets, plot_legends, plot_units = self._get_plot_data_sets(start, end, periodicity, summary_type_measurement_tuples)
 
-        evening_times = plot_data_sets[0]
-        duration = plot_data_sets[1]
+        # check if each plot data has same unit, otherwise the scale might get screwd
+        # if len(Counter(plot_units).keys()) > 1:
+        #     raise ValueError("Different Units")
+
+        fig = self.__create_figure(plot_type, dates, plot_data_sets, plot_legends, plot_units)
 
         # setting title
         if 'title' in kwargs.keys():
             title = kwargs['title']
         else:
             title = "Bedtime Plot"
+        fig.update_layout(title=title)
+
+        # saving the plot as an image
+        if 'output_file_name' in kwargs.keys():
+            output_file_name = kwargs['output_file_name']
+        else:
+            output_file_name = "temp"
+        self.__save(fig, output_file_name)
+
+
+    def __create_figure(self, plot_type, dates, plot_data_sets, plot_legends, plot_units, **kwargs):
+
+        plot_type_to_create_figure_func = {
+            PlotType.time_period: self.__time_period_figure,
+            PlotType.lines: self.__line_figure,
+            PlotType.bar_chart: self.__bar_chart_figure,
+            PlotType.histogram: self.__histogram_figure,
+        }
+
+        create_figure_func = plot_type_to_create_figure_func[plot_type]
+        fig = create_figure_func(dates, plot_data_sets, plot_legends, plot_units, **kwargs)
+
+        return fig
+
+
+    def __time_period_figure(self, dates, plot_data_sets, plot_legends, plot_units, **kwargs):
+        start_times = plot_data_sets[0] # start of the period (= time of going to bed in the evening)
+        duration = plot_data_sets[1] # duration of the sleep period
 
         fig = go.Figure()
-        fig.add_trace(go.Bar(x=dates, y=duration, base=evening_times))
-        fig.update_layout(title=title, xaxis={'title': {'text': 'Dates'}}, yaxis={'title': {'text': 'Time'}})
+        fig.add_trace(go.Bar(x=dates, y=duration, base=start_times))
+        fig.update_layout(xaxis={'title': {'text': 'Dates'}}, yaxis={'title': {'text': 'Time'}})
 
+        # adjusting ticks and ticktext for readable timeformats on the y-axis
         tickvals = list(range(0, 48, 1))
         ticktext = []
         for tickval in tickvals:
@@ -126,99 +162,19 @@ class PlotlyAnalyser(AbstractPlotter):
         fig.update_yaxes(tickvals=tickvals)
         fig.update_yaxes(ticktext=ticktext)
 
+        # more space for the time text
         fig.update_traces(marker_colorbar_ticklen=10, selector=dict(type='scatter'))
 
-        # saving the plot as an image
-        if 'output_file_name' in kwargs.keys():
-            output_file_name = kwargs['output_file_name']
-        else:
-            output_file_name = "temp"
-        self.__save(fig, output_file_name)
+        return fig
 
 
-    def __bar_plot_multiple_of_same_unit(self, start: str, end: str, periodicity: Periodicity, summary_type_measurement_tuples: List[Tuple[str, str]], **kwargs):
-        
-        dates, plot_data_sets, plot_legends, plot_units = self._get_plot_data_sets(start, end, periodicity, summary_type_measurement_tuples)
-
-        # check if each plot data has same unit, otherwise the scale might get screwd
-        if len(Counter(plot_units).keys()) > 1:
-            raise ValueError("Different Units")
-        unit_as_text = UnitsAnnotationText[plot_units[0]]
-
-        # setting title
-        if 'title' in kwargs.keys():
-            title = kwargs['title']
-        else:
-            title = "Bar Chart"
-
-        # drawing plotly figure
-        fig = px.bar(x=dates, y=plot_data_sets, title=title, labels={'x': 'Dates', 'value': unit_as_text})
-
-        # setting the legend to identify the different lines
-        for i, legend_name in enumerate(plot_legends):
-            fig['data'][i]['name'] = legend_name
-
-        # saving the plot as an image
-        if 'output_file_name' in kwargs.keys():
-            output_file_name = kwargs['output_file_name']
-        else:
-            output_file_name = "temp"
-        self.__save(fig, output_file_name)
-
-
-
-    def __line_plot_multiple_of_same_unit(self, start: str, end: str, periodicity: Periodicity, summary_type_measurement_tuples: List[Tuple[str, str]], **kwargs):
-        """
-        Plotting one or multiple lines in one plot. 
-        The different measurements should preferably have the same
-        unit to not screw the scale of the axis.
-
-        Parameters
-        ----------
-        start : str
-            Analysis start date in YYYY-MM-DD format.
-
-        end : str
-            Analysis end date in YYYY-MM-DD format.
-
-        periodicity : Periodicity
-            Which timeframes must be considered, e.g. daily, weekly, monthyl, yearly.
-
-        summary_type_measurement_tuples : List[Tuple[str, str]]
-            List of Tuples, where each tuple represents the summary type and 
-            measurement name which will get plotted.    
-
-        **kwargs:
-            Additional keyword arguments.
-            
-            title : str
-                Title of the plot.
-            
-            output_file_name : str
-                Name of the output file.
-
-            yaxis_to_zero : bool
-                If set to true, the y-axis will always start from zero.
-        """
-        
-        dates, plot_data_sets, plot_legends, plot_units = self._get_plot_data_sets(start, end, periodicity, summary_type_measurement_tuples)
-
-        # check if each plot data has same unit, otherwise the scale might get screwd
-        if len(Counter(plot_units).keys()) > 1:
-            raise ValueError("Different Units")
-        unit_as_text = UnitsAnnotationText[plot_units[0]]
-
-        # setting title
-        if 'title' in kwargs.keys():
-            title = kwargs['title']
-        else:
-            title = "Line Plot"
-
+    def __line_figure(self, dates, plot_data_sets, plot_legends, plot_units, **kwargs):
         # drawing plotly figure
         fig = go.Figure()
         for data, legend in zip(plot_data_sets, plot_legends):
             fig.add_trace(go.Scatter(x=dates, y=data, name=legend, mode='lines+markers'))
-        fig.update_layout(title=title, xaxis={'title': {'text': 'Dates'}}, yaxis={'title': {'text': unit_as_text}})
+        unit_as_text = UnitsAnnotationText[plot_units[0]]
+        fig.update_layout(xaxis={'title': {'text': 'Dates'}}, yaxis={'title': {'text': unit_as_text}})
 
         if plot_units[0] == Unit.time_of_day:
             fig.update_yaxes(type="date")
@@ -235,40 +191,35 @@ class PlotlyAnalyser(AbstractPlotter):
         for i, legend_name in enumerate(plot_legends):
             fig['data'][i]['name'] = legend_name
 
-        # saving the plot as an image
-        if 'output_file_name' in kwargs.keys():
-            output_file_name = kwargs['output_file_name']
-        else:
-            output_file_name = "temp"
-        self.__save(fig, output_file_name)
+        return fig
 
 
-    def __histogram_plot_multiple_of_same_unit(self, start: str, end: str, periodicity: Periodicity, summary_type_measurement_tuples: List[Tuple[str, str]], **kwargs):
-
-        dates, plot_data_sets, plot_legends, plot_units = self._get_plot_data_sets(start, end, periodicity, summary_type_measurement_tuples)
-
-        # check if each plot data has same unit, otherwise the scale might get screwd
-        if len(Counter(plot_units).keys()) > 1:
-            raise ValueError("Different Units")
+    def __bar_chart_figure(self, dates, plot_data_sets, plot_legends, plot_units, **kwargs):
+        
+        # drawing plotly figure
         unit_as_text = UnitsAnnotationText[plot_units[0]]
+        fig = px.bar(x=dates, y=plot_data_sets, labels={'x': 'Dates', 'value': unit_as_text})
 
-        # setting title
-        if 'title' in kwargs.keys():
-            title = kwargs['title']
-        else:
-            title = "Histogram"
+        # setting the legend to identify the different lines
+        for i, legend_name in enumerate(plot_legends):
+            fig['data'][i]['name'] = legend_name
 
+        return fig
+
+
+    def __histogram_figure(self, dates, plot_data_sets, plot_legends, plot_units, **kwargs):
+        
         # TODO: customize
         interval_size = 2
-        nbins = 100 / 5
+        nbins = 100 / interval_size
 
         # drawing plotly figure
         fig = go.Figure()
         for data, legend in zip(plot_data_sets, plot_legends):
             fig.add_trace(go.Histogram(x=data, name=legend, histnorm='percent'))
+        unit_as_text = UnitsAnnotationText[plot_units[0]]
         fig.update_layout(
             barmode='overlay', 
-            title=title, 
             xaxis={'title': {'text': unit_as_text}}, 
             yaxis={'title': {'text': 'Percent'}}
         )
@@ -278,9 +229,5 @@ class PlotlyAnalyser(AbstractPlotter):
         if plot_units[0] == Unit.score:
             fig.update_layout(xaxis={'range': [0, 100]})
 
-        # saving the plot as an image
-        if 'output_file_name' in kwargs.keys():
-            output_file_name = kwargs['output_file_name']
-        else:
-            output_file_name = "temp"
-        self.__save(fig, output_file_name)
+        return fig
+

@@ -29,7 +29,7 @@ class AbstractAnalyser:
         self._output_location = os.path.join(os.getcwd(), *output_path)
 
 
-    def analyse(self, start: str, end: str, periodicity: Periodicity, analysis_type: AnalysisType, *args):
+    def analyse(self, start: str, end: str, analysis_type: AnalysisType, *args):
         """
         Parameters
         ----------
@@ -45,11 +45,11 @@ class AbstractAnalyser:
         analysis_type : AnalysisType
             The chosen type of anayzis for this method call.
         """
-        self.__check_parameters(start, end, periodicity, analysis_type, *args)
-        self._analyse(start, end, periodicity, analysis_type, *args)
+        self.__check_parameters(start, end, analysis_type, *args)
+        self._analyse(start, end, analysis_type, *args)
     
 
-    def __check_parameters(self, start: str, end: str, periodicity: Periodicity, analysis_type: AnalysisType, *args):
+    def __check_parameters(self, start: str, end: str, analysis_type: AnalysisType, *args):
         """
         Parameters
         ----------
@@ -75,7 +75,7 @@ class AbstractAnalyser:
         # TODO: check if dates have valid format
 
 
-    def _analyse(self, start_date: str, end_date: str, periodicity: str, analysis_type, *args):
+    def _analyse(self, start_date: str, end_date: str, analysis_type: AnalysisType, *args):
         """
         Parameters
         ----------

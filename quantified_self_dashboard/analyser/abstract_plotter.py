@@ -101,7 +101,7 @@ class AbstractPlotter(AbstractAnalyser):
         summary_transform = summary_type_transform[summary_type]
         if measurement_name in summary_transform.keys():
             measurement_transform = summary_transform[measurement_name]
-            trans_func, _, _, _, trans_unit, measurement_title, one_day_offset = measurement_transform
+            trans_func, raw_data_type, trans_output_type, _, trans_unit, measurement_title, one_day_offset = measurement_transform
             if one_day_offset:
                 # in some cases the oura api is storing the measurements 
                 # of the night from day 1 to day 2 in the day 1 summary
@@ -111,10 +111,11 @@ class AbstractPlotter(AbstractAnalyser):
         else:
             raise ValueError("No transformation available")
 
+        raw_values_are_numberical = raw_data_type in [int, float]
+        transformed_values_are_numerical = trans_output_type in [int, float]
 
         # retrieving the data as a np.array or list
-        data_as_np_array = True # might need to be changed later
-        if data_as_np_array:
+        if raw_values_are_numberical:
             raw_data = self._container.get_values(start, end, summary_type, measurement_name)
             vfunc = np.vectorize(trans_func)
             daily_plot_data = vfunc(raw_data)
@@ -124,16 +125,14 @@ class AbstractPlotter(AbstractAnalyser):
             raw_data = self._container.get_values(start, end, summary_type, measurement_name, output_as_np_array=False)
             daily_plot_data = list(map( trans_func, raw_data ))
 
-
-        # only if transformed data is a number
-        # and plot_data is a numby array
-
-        # averaging depending on teh given periodicty
-        
+        # averaging depending on the given periodicty
         if periodicity == Periodicity.daily:
             plot_data = daily_plot_data
         else:
-            plot_data = self.__transform_daily_values_to_averaged_by_periodictiy(start, end, periodicity, daily_plot_data)
+            if transformed_values_are_numerical:
+                plot_data = self.__transform_daily_values_to_averaged_by_periodictiy(start, end, periodicity, daily_plot_data)
+            else:
+                raise NotImplementedError()
         
         return plot_data, measurement_title, trans_unit
 
@@ -208,9 +207,3 @@ class AbstractPlotter(AbstractAnalyser):
         average_values_sorted_by_identifiers = list(map(lambda t: t[1], sorted_averaged_value_tuples))
         
         return np.asarray(average_values_sorted_by_identifiers)
-
-
-    
-
-
-
