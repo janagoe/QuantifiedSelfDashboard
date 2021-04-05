@@ -25,7 +25,8 @@ class PlotlyAnalyser(AbstractPlotter):
 
     _supported_analysis_types = [
         AnalysisType.scores_daily, 
-        AnalysisType.sleep_durations, 
+        AnalysisType.scores_weekly, 
+        AnalysisType.sleep_durations_daily, 
         AnalysisType.sleep_score_distribution,
         AnalysisType.readiness_score_distribution,
         AnalysisType.activity_score_distribution,
@@ -100,14 +101,47 @@ class PlotlyAnalyser(AbstractPlotter):
 
 
     def __create_plot(self, start: str, end: str, periodicity: Periodicity, summary_type_measurement_tuples: List[Tuple[str, str]], plot_type: PlotType, **kwargs):
+        """
+        Creating the plot, adaptable to all plot types, periodicities and summary_type-measurement_name combinations. 
+
+        Parameters
+        ----------
+        start : str
+            Analysis start date in YYYY-MM-DD format.
+
+        end : str
+            Analysis end date in YYYY-MM-DD format.
+
+        periodicity : Periodicity
+            Which timeframes must be considered, e.g. daily, weekly, monthyl, yearly.
+
+        summary_type_measurement_tuples : List[Tuple[str, str]]
+            List of Tuples, where each tuple represents the summary type and 
+            measurement name which will get plotted.  
+
+        plot_type : PlotType
+            Which kind of plot will be created. Either lines, bar chart, histogram or time periods. 
+            Easily extendable.
+        """
 
         dates, plot_data_sets, plot_legends, plot_units = self._get_plot_data_sets(start, end, periodicity, summary_type_measurement_tuples)
 
+        # TODO
         # check if each plot data has same unit, otherwise the scale might get screwd
         # if len(Counter(plot_units).keys()) > 1:
         #     raise ValueError("Different Units")
 
         fig = self.__create_figure(plot_type, dates, plot_data_sets, plot_legends, plot_units)
+
+        # setting ticks format depending on periodicty
+        if periodicity == Periodicity.weekly:
+            fig.update_layout(xaxis={'tickformat': "CW%W"})
+        elif periodicity == Periodicity.monthly:
+            fig.update_layout(xaxis={'tickformat': "%b"})
+        elif periodicity == Periodicity.weekdays:
+            fig.update_layout(xaxis={'tickformat': "%a"})
+        elif periodicity == Periodicity.yearly:
+            fig.update_layout(xaxis={'tickformat': "%Y"})
 
         # setting title
         if 'title' in kwargs.keys():
@@ -124,7 +158,15 @@ class PlotlyAnalyser(AbstractPlotter):
         self.__save(fig, output_file_name)
 
 
-    def __create_figure(self, plot_type, dates, plot_data_sets, plot_legends, plot_units, **kwargs):
+    def __create_figure(self, plot_type, dates, plot_data_sets, plot_legends, plot_units, **kwargs) -> Figure:
+        """
+        Helper method to call the correct plotting method depending on the plot type.
+        All parameters will be forwarded to corresponding method. 
+
+        Returns
+        -------
+        Figure
+        """
 
         plot_type_to_create_figure_func = {
             PlotType.time_period: self.__time_period_figure,
@@ -139,9 +181,17 @@ class PlotlyAnalyser(AbstractPlotter):
         return fig
 
 
-    def __time_period_figure(self, dates, plot_data_sets, plot_legends, plot_units, **kwargs):
-        start_times = plot_data_sets[0] # start of the period (= time of going to bed in the evening)
-        duration = plot_data_sets[1] # duration of the sleep period
+    def __time_period_figure(self, dates: pd.DatetimeIndex, plot_data_sets, plot_legends: List[str], plot_units: List[Unit], **kwargs) -> Figure:
+        """
+    	Plotting time periods as a bar chart. 
+        A starting time and duration have to be given. 
+        The starting time is represented as an offset of the bars.
+        The y-axis is representing the times of the day.
+        An example would be the time one got to bed and the duration in bed.
+        """
+        
+        start_times = plot_data_sets[0] 
+        duration = plot_data_sets[1] 
 
         fig = go.Figure()
         fig.add_trace(go.Bar(x=dates, y=duration, base=start_times))
@@ -168,7 +218,11 @@ class PlotlyAnalyser(AbstractPlotter):
         return fig
 
 
-    def __line_figure(self, dates, plot_data_sets, plot_legends, plot_units, **kwargs):
+    def __line_figure(self, dates: pd.DatetimeIndex, plot_data_sets, plot_legends: List[str], plot_units: List[Unit], **kwargs) -> Figure:
+        """
+        Drawing one or multiple lines in one plot. 
+        """
+        
         # drawing plotly figure
         fig = go.Figure()
         for data, legend in zip(plot_data_sets, plot_legends):
@@ -194,9 +248,11 @@ class PlotlyAnalyser(AbstractPlotter):
         return fig
 
 
-    def __bar_chart_figure(self, dates, plot_data_sets, plot_legends, plot_units, **kwargs):
-        
-        # drawing plotly figure
+    def __bar_chart_figure(self, dates: pd.DatetimeIndex, plot_data_sets, plot_legends: List[str], plot_units: List[Unit], **kwargs) -> Figure:
+        """
+        Drawing one or multiple bars in one plot. 
+        """
+
         unit_as_text = UnitsAnnotationText[plot_units[0]]
         fig = px.bar(x=dates, y=plot_data_sets, labels={'x': 'Dates', 'value': unit_as_text})
 
@@ -207,22 +263,29 @@ class PlotlyAnalyser(AbstractPlotter):
         return fig
 
 
-    def __histogram_figure(self, dates, plot_data_sets, plot_legends, plot_units, **kwargs):
-        
-        # TODO: customize
-        interval_size = 2
+    def __histogram_figure(self, dates: pd.DatetimeIndex, plot_data_sets, plot_legends: List[str], plot_units: List[Unit], **kwargs) -> Figure:
+        """
+        Drawing a histogram of one or more distributions.
+        """
+
+        # TODO: customize, this makes only sense for score units
+        interval_size = 5
         nbins = 100 / interval_size
 
         # drawing plotly figure
         fig = go.Figure()
         for data, legend in zip(plot_data_sets, plot_legends):
             fig.add_trace(go.Histogram(x=data, name=legend, histnorm='percent'))
+
+        # setting annotations
         unit_as_text = UnitsAnnotationText[plot_units[0]]
         fig.update_layout(
             barmode='overlay', 
             xaxis={'title': {'text': unit_as_text}}, 
             yaxis={'title': {'text': 'Percent'}}
         )
+
+        # transparency
         fig.update_traces(opacity=0.75)
 
         # setting range of x-axis for Scores to 0 to 100
@@ -230,4 +293,3 @@ class PlotlyAnalyser(AbstractPlotter):
             fig.update_layout(xaxis={'range': [0, 100]})
 
         return fig
-

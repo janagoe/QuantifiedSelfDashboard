@@ -79,6 +79,7 @@ AnalysisType = Enum(
         ("sleep_score_distribution", 5),
         ("readiness_score_distribution", 6),
         ("activity_score_distribution", 7),
+        ("scores_weekly", 8),
     ]
 )
 

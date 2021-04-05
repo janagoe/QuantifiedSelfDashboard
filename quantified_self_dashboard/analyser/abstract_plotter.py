@@ -4,6 +4,7 @@ import datetime
 from typing import List, Tuple, Union
 
 import numpy as np
+import pandas as pd
 
 from summary.summary_container import SummaryContainer
 from common.constants import *
@@ -17,7 +18,6 @@ class AbstractPlotter(AbstractAnalyser):
     """
     Analysing SummaryContainer data by plotting, using the plotly library.
     """
-
 
     def _get_plot_data_sets(self, start: str, end: str, periodicity: Periodicity, summary_type_measurement_tuples: List[Tuple[str, str]]) -> Tuple[List[str], List[Union[np.array, List]], List[str], List[Unit]]:
         """
@@ -42,14 +42,14 @@ class AbstractPlotter(AbstractAnalyser):
         Returns
         --------
         Tuple of multiple lists:
-            List of all date strings,
+            pd.DatetimeIndex,
             List of np.arrays or rists of plottalbe data,
             List of titles of name of the measurements,
             List of units of the measurements
         """
 
         # x-axis
-        dates = all_date_strings_between_dates(start, end)
+        dates_by_periodicity = self._get_dates_by_periodicity(start, end, periodicity)
 
         # y-axis
         plot_data_sets, plot_legends, plot_units = [], [], []
@@ -62,7 +62,7 @@ class AbstractPlotter(AbstractAnalyser):
             plot_legends.append(plot_legend_name)
             plot_units.append(plot_unit)
 
-        return dates, plot_data_sets, plot_legends, plot_units
+        return dates_by_periodicity, plot_data_sets, plot_legends, plot_units
 
 
     def _get_plottable_data(self, start: str, end: str, periodicity: Periodicity, summary_type: str, measurement_name: str) -> Tuple[Union[np.array, List], str, Unit]:
@@ -137,6 +137,37 @@ class AbstractPlotter(AbstractAnalyser):
         return plot_data, measurement_title, trans_unit
 
 
+    def _get_dates_by_periodicity(self, start: str, end: str, periodicity: Periodicity) -> pd.DatetimeIndex:
+        """
+        Creating pd.DatetimeIndex of all relevant datetime events to plot with the given periodicity. 
+        For weekly and monthly the week/month the start and end date are in are included.
+        """
+
+        if periodicity == Periodicity.daily:
+            date_range = pd.date_range(start, end)
+            return date_range
+        
+        if periodicity == Periodicity.weekly:
+            end_as_dt = pd.to_datetime(end)
+            while end_as_dt.day_of_week != 6:
+                end_as_dt = end_as_dt + pd.offsets.DateOffset(1)
+            date_range = pd.date_range(start, end_as_dt, freq='W')    
+            return date_range
+        
+        if periodicity == Periodicity.monthly:
+            date_range = pd.date_range(*(pd.to_datetime([start, end]) + pd.offsets.MonthEnd()), freq='M')
+            if date_range[-1].month != pd.to_datetime([end])[0].month:
+                date_range = date_range[:-1]
+            return date_range
+        
+        if periodicity == Periodicity.yearly:
+            raise NotImplementedError()
+
+        if periodicity == Periodicity.weekdays:
+            date_range = pd.date_range(start, periods=7)
+            return date_range
+
+
     def __transform_daily_values_to_averaged_by_periodictiy(self, start: str, end: str, periodicity: Periodicity, daily_data: Union[np.array, List]) -> np.array:
         """
         Averaging the daily values into averaged values depending on the periodicity.
@@ -201,7 +232,6 @@ class AbstractPlotter(AbstractAnalyser):
             averaged_values[identifier] = averaged_value
 
         # transforming dict into list in chronological order
-        weekly_data = np.zeros(len(averaged_values.keys()))
         mapped_averaged_value_tuples = map(lambda k: (identifier_sorting(k), averaged_values[k]), averaged_values.keys())
         sorted_averaged_value_tuples = sorted(mapped_averaged_value_tuples, key=lambda s: s[0])
         average_values_sorted_by_identifiers = list(map(lambda t: t[1], sorted_averaged_value_tuples))
