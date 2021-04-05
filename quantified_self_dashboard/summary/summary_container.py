@@ -254,7 +254,7 @@ class SummaryContainer:
             for attr in summary.measurement_attributes: 
                 if attr == SUMMARY_DATE:
                     continue
-                bundle_attr_name = "{}_{}".format(summary_type, attr)
+                bundle_attr_name = "{}_{}".format(summary_type.name, attr)
                 bundle[bundle_attr_name] = getattr(summary, attr)
 
         return bundle
@@ -272,7 +272,6 @@ class SummaryContainer:
             bundle = self.get_summary_bundle_of_date(date)
             data[index] = bundle
         return data
-
 
 
     def get_values(self, start: str, end: str, summary_type: SummaryType, measurement_name: str, output_as_np_array=True) -> Union[np.array, List]:

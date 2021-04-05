@@ -78,7 +78,11 @@ class CsvStorageConnector(AbstractConnector):
             # date is not in the DataFrame
             return False, dict()
 
-        if len(date_entry) > 1:
+        if date_entry.empty:
+            # date is not in the DataFrame
+            return False, dict()
+
+        if len(date_entry.index) >= 2:
             raise AttributeError("Invalid File Content. Too many date entries in one file.")
 
         # filtering out columns relevant for this summary type
