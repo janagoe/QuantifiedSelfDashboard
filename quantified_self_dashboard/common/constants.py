@@ -72,14 +72,26 @@ UnitsAnnotationText = {
 AnalysisType = Enum(
     value = 'AnalysisType',
     names = [
-        ("test", 0),
+
         ("scores_daily", 1),
-        ("bedtimes_daily", 2),
-        ("sleep_durations", 4),
-        ("sleep_score_distribution", 5),
-        ("readiness_score_distribution", 6),
-        ("activity_score_distribution", 7),
-        ("scores_weekly", 8),
+        ("scores_weekly", 2),
+        ("scores_monthly", 3),
+        ("scores_weekdays", 4),
+        ("sleep_durations_daily", 5),
+        ("sleep_durations_weekly", 6),
+        ("sleep_durations_monthly", 7),
+        ("sleep_durations_weekdays", 8),
+        ("bedtimes_daily", 9),
+        ("bedtimes_weekly", 10),
+        ("bedtimes_monthly", 11),
+        ("bedtimes_weekdays", 12),
+        ("recovery_indicators_daily", 13),
+        ("recovery_indicators_weekly", 14),
+        ("recovery_indicators_monthly", 15),
+        ("recovery_indicators_weekdays", 16),
+        ("sleep_score_distribution", 17),
+        ("readiness_score_distribution", 18),
+        ("activity_score_distribution", 19),
     ]
 )
 

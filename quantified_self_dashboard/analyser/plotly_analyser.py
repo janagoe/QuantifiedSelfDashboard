@@ -4,6 +4,7 @@ import datetime
 from typing import List, Tuple, Union
 
 import numpy as np
+import pandas as pd
 from collections import Counter
 import plotly
 import plotly.express as px
@@ -26,11 +27,27 @@ class PlotlyAnalyser(AbstractPlotter):
     _supported_analysis_types = [
         AnalysisType.scores_daily, 
         AnalysisType.scores_weekly, 
+        AnalysisType.scores_monthly, 
+        AnalysisType.scores_weekdays, 
+
         AnalysisType.sleep_durations_daily, 
+        AnalysisType.sleep_durations_weekly, 
+        AnalysisType.sleep_durations_monthly, 
+        AnalysisType.sleep_durations_weekdays, 
+
+        AnalysisType.bedtimes_daily,
+        AnalysisType.bedtimes_weekly,
+        AnalysisType.bedtimes_monthly,
+        AnalysisType.bedtimes_weekdays,
+
+        AnalysisType.recovery_indicators_daily,
+        AnalysisType.recovery_indicators_weekly,
+        AnalysisType.recovery_indicators_monthly,
+        AnalysisType.recovery_indicators_weekdays,
+
         AnalysisType.sleep_score_distribution,
         AnalysisType.readiness_score_distribution,
         AnalysisType.activity_score_distribution,
-        AnalysisType.bedtimes_daily
     ]
 
 
@@ -137,11 +154,11 @@ class PlotlyAnalyser(AbstractPlotter):
         if periodicity == Periodicity.weekly:
             fig.update_layout(xaxis={'tickformat': "CW%W"})
         elif periodicity == Periodicity.monthly:
-            fig.update_layout(xaxis={'tickformat': "%b"})
+            fig.update_layout(xaxis={'tickformat': "%B", 'tickvals': dates})
         elif periodicity == Periodicity.weekdays:
-            fig.update_layout(xaxis={'tickformat': "%a"})
+            fig.update_layout(xaxis={'tickformat': "%a", 'tickvals': dates})
         elif periodicity == Periodicity.yearly:
-            fig.update_layout(xaxis={'tickformat': "%Y"})
+            fig.update_layout(xaxis={'tickformat': "%Y", 'tickvals': dates})
 
         # setting title
         if 'title' in kwargs.keys():
@@ -158,7 +175,7 @@ class PlotlyAnalyser(AbstractPlotter):
         self.__save(fig, output_file_name)
 
 
-    def __create_figure(self, plot_type, dates, plot_data_sets, plot_legends, plot_units, **kwargs) -> Figure:
+    def __create_figure(self, plot_type, dates, plot_data_sets, plot_legends, plot_units, **kwargs) -> go.Figure:
         """
         Helper method to call the correct plotting method depending on the plot type.
         All parameters will be forwarded to corresponding method. 
@@ -181,7 +198,7 @@ class PlotlyAnalyser(AbstractPlotter):
         return fig
 
 
-    def __time_period_figure(self, dates: pd.DatetimeIndex, plot_data_sets, plot_legends: List[str], plot_units: List[Unit], **kwargs) -> Figure:
+    def __time_period_figure(self, dates: pd.DatetimeIndex, plot_data_sets, plot_legends: List[str], plot_units: List[Unit], **kwargs) -> go.Figure:
         """
     	Plotting time periods as a bar chart. 
         A starting time and duration have to be given. 
@@ -218,7 +235,7 @@ class PlotlyAnalyser(AbstractPlotter):
         return fig
 
 
-    def __line_figure(self, dates: pd.DatetimeIndex, plot_data_sets, plot_legends: List[str], plot_units: List[Unit], **kwargs) -> Figure:
+    def __line_figure(self, dates: pd.DatetimeIndex, plot_data_sets, plot_legends: List[str], plot_units: List[Unit], **kwargs) -> go.Figure:
         """
         Drawing one or multiple lines in one plot. 
         """
@@ -229,9 +246,6 @@ class PlotlyAnalyser(AbstractPlotter):
             fig.add_trace(go.Scatter(x=dates, y=data, name=legend, mode='lines+markers'))
         unit_as_text = UnitsAnnotationText[plot_units[0]]
         fig.update_layout(xaxis={'title': {'text': 'Dates'}}, yaxis={'title': {'text': unit_as_text}})
-
-        if plot_units[0] == Unit.time_of_day:
-            fig.update_yaxes(type="date")
 
         fig.update_xaxes(constraintoward="left")
 
@@ -248,7 +262,7 @@ class PlotlyAnalyser(AbstractPlotter):
         return fig
 
 
-    def __bar_chart_figure(self, dates: pd.DatetimeIndex, plot_data_sets, plot_legends: List[str], plot_units: List[Unit], **kwargs) -> Figure:
+    def __bar_chart_figure(self, dates: pd.DatetimeIndex, plot_data_sets, plot_legends: List[str], plot_units: List[Unit], **kwargs) -> go.Figure:
         """
         Drawing one or multiple bars in one plot. 
         """
@@ -263,7 +277,7 @@ class PlotlyAnalyser(AbstractPlotter):
         return fig
 
 
-    def __histogram_figure(self, dates: pd.DatetimeIndex, plot_data_sets, plot_legends: List[str], plot_units: List[Unit], **kwargs) -> Figure:
+    def __histogram_figure(self, dates: pd.DatetimeIndex, plot_data_sets, plot_legends: List[str], plot_units: List[Unit], **kwargs) -> go.Figure:
         """
         Drawing a histogram of one or more distributions.
         """

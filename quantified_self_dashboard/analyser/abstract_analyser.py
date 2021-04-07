@@ -39,9 +39,6 @@ class AbstractAnalyser:
         end : str
             Analysis end date in YYYY-MM-DD format.
 
-        periodicity : Periodicity
-            Which timeframes must be considered, e.g. daily, weekly, monthyl, yearly.
-
         analysis_type : AnalysisType
             The chosen type of anayzis for this method call.
         """

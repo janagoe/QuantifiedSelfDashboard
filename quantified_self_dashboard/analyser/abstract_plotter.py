@@ -106,8 +106,10 @@ class AbstractPlotter(AbstractAnalyser):
                 # in some cases the oura api is storing the measurements 
                 # of the night from day 1 to day 2 in the day 1 summary
                 # but here it might be better to display them on day 2
-                start = get_day_before(start)
-                end = get_day_before(end)
+                loading_start = get_day_before(start)
+                loading_end = get_day_before(end)
+            else:
+                loading_start, loading_end = start, end
         else:
             raise ValueError("No transformation available")
 
@@ -116,13 +118,13 @@ class AbstractPlotter(AbstractAnalyser):
 
         # retrieving the data as a np.array or list
         if raw_values_are_numberical:
-            raw_data = self._container.get_values(start, end, summary_type, measurement_name)
+            raw_data = self._container.get_values(loading_start, loading_end, summary_type, measurement_name)
             vfunc = np.vectorize(trans_func)
             daily_plot_data = vfunc(raw_data)
         else:
             # datetime values and strings cannot be stored in normal np arrays
             # using python lists instead
-            raw_data = self._container.get_values(start, end, summary_type, measurement_name, output_as_np_array=False)
+            raw_data = self._container.get_values(loading_start, loading_end, summary_type, measurement_name, output_as_np_array=False)
             daily_plot_data = list(map( trans_func, raw_data ))
 
         # averaging depending on the given periodicty

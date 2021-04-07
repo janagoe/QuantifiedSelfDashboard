@@ -43,15 +43,10 @@ sleep_transform = {
     "deep": [seconds_to_hours, int, float, Unit.seconds, Unit.hours, "Deep Sleep Time", True],
     "duration": [seconds_to_hours, int, float, Unit.seconds, Unit.hours, "Sleep Duration", True],
 
-    "bedtime_end_delta": [seconds_to_hours, int, datetime.time, Unit.seconds, Unit.time_of_day, "End of Sleep Period", True],
-    "bedtime_start_delta": [seconds_to_hours_in_relation_to_midnight, int, datetime.time, Unit.seconds, Unit.time_of_day, "Start of Sleep Period", True],
-    "midpoint_at_delta": [seconds_to_hours, int, datetime.time, Unit.seconds, Unit.time_of_day, "Sleep Midpoint Delta", True],
-    "midpoint_time": [seconds_to_hours, int, datetime.time, Unit.seconds, Unit.time_of_day, "Sleep Mindpoint", True],
-
-    # "bedtime_end_delta": [seconds_to_datetime, int, datetime.time, Unit.seconds, Unit.time_of_day, "End of Sleep Period", True],
-    # "bedtime_start_delta": [seconds_to_datetime_in_relation_to_midnight, int, datetime.time, Unit.seconds, Unit.time_of_day, "Start of Sleep Period", True],
-    # "midpoint_at_delta": [seconds_to_datetime, int, datetime.time, Unit.seconds, Unit.time_of_day, "Sleep Midpoint Delta", True],
-    # "midpoint_time": [seconds_to_datetime, int, datetime.time, Unit.seconds, Unit.time_of_day, "Sleep Mindpoint", True],
+    "bedtime_end_delta": [seconds_to_hours, int, float, Unit.seconds, Unit.hours, "End of Sleep Period", True],
+    "bedtime_start_delta": [seconds_to_hours_in_relation_to_midnight, int, float, Unit.seconds, Unit.hours, "Start of Sleep Period", True],
+    "midpoint_at_delta": [seconds_to_hours, int, float, Unit.seconds, Unit.hours, "Sleep Midpoint Delta", True],
+    "midpoint_time": [seconds_to_hours, int, float, Unit.seconds, Unit.hours, "Sleep Mindpoint", True],
 
     "efficiency": [identity, int, int, Unit.score, Unit.score, "Sleep Efficiency", True],
     "score": [identity, int, int, Unit.score, Unit.score, "Sleep Score", True],
@@ -105,8 +100,8 @@ activity_transform = {
 
 
 bedtime_transform = {
-    "bedtime_window_start": [seconds_to_datetime_in_relation_to_midnight, int, datetime.time, Unit.seconds, Unit.time_of_day, "Bedtime Window Start Time", False],
-    "bedtime_window_end": [seconds_to_datetime_in_relation_to_midnight, int, datetime.time, Unit.seconds, Unit.time_of_day, "Bedtime Window End Time", False],
+    "bedtime_window_start": [seconds_to_datetime_in_relation_to_midnight, int, datetime.time, Unit.seconds, Unit.hours, "Bedtime Window Start Time", False],
+    "bedtime_window_end": [seconds_to_datetime_in_relation_to_midnight, int, datetime.time, Unit.seconds, Unit.hours, "Bedtime Window End Time", False],
 }
 
 
