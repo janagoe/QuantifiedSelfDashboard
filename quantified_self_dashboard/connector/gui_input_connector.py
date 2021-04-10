@@ -15,9 +15,7 @@ class GuiInputConnector(AbstractConnector):
 
         self.__subjective_tracking_attr_types = dict()
         self.__subjective_tracking_attributes = []
-        for attr_name, attr_type_str in subjective_tracking_items:
-
-            attr_type = SubjectiveMeasurementType[attr_type_str]
+        for attr_name, attr_type in subjective_tracking_items:
 
             # must be a valid type
             if attr_type in Subjective.subjective_tracking_types:
