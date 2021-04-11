@@ -6,12 +6,15 @@ from connector.abstract_connector import AbstractConnector
 from summary.summary import Subjective
 
 
-
 class GuiInputConnector(AbstractConnector):
 
     supported_summary_types = [SummaryType.subjective]
 
     def __init__(self, subjective_tracking_items: List[Tuple[str, str]]):
+        # TODO: reconsider this
+
+
+        self.__input_data_sets = dict()
 
         self.__subjective_tracking_attr_types = dict()
         self.__subjective_tracking_attributes = []
@@ -33,28 +36,14 @@ class GuiInputConnector(AbstractConnector):
         if summary_type != SummaryType.subjective:
             raise AttributeError("The GuiInputConnector can only collect Subjective Summary Types")
 
-        data = self.__ask_data_from_user()
-        data[SUMMARY_DATE] = date
-        
-        return True, data
+        if date in self.__input_data_sets.keys():
+            data = self.__input_data_sets[date]
+            return True, data
 
-    def __ask_data_from_user(self):
-        """
-        Creating dummy data for now.
-        Later getting the data from a gui
-        """
+        return False, dict()
 
-        data = dict()
-        for attr in self.__subjective_tracking_attributes:
-            attr_type = self.__subjective_tracking_attr_types[attr]
-            if attr_type == SubjectiveMeasurementType.bool:
-                value = random.choice([True, False])
-            elif attr_type == SubjectiveMeasurementType.number:
-                value = random.randrange(1000) - 500
-            elif attr_type == SubjectiveMeasurementType.percentage:
-                value = random.randrange(101)
-            data[attr] = value
 
-        return data
-
+    def add_subjective_input(self, summary_date: str, input_data: dict()):
+        # TODO: add checks
+        self.__input_data_sets[summary_date] = input_data
    

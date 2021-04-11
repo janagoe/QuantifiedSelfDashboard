@@ -39,8 +39,8 @@ class SubjectiveInputCallbackWrapper:
         return len(self.__subjective_input_structure)
 
     def add_subjective_input(self, summary_date, data: dict):
-        # TODO putting data into gui input connector
         print("add_subjective_input", summary_date, data)
+        self.__gui_intput_connector.add_subjective_input(summary_date, data)
 
     def save():
         # TODO save into storage
@@ -55,6 +55,7 @@ class SubjectiveInputCallbackWrapper:
 
 if __name__ == "__main__":
 
+    # TODO: improve config structure
     config = configparser.ConfigParser()
     config.read("config.ini")
     access_token = config["oura.auth"].get('access-token')
@@ -76,6 +77,8 @@ if __name__ == "__main__":
     conn_storage = csv_storage_connector.CsvStorageConnector(storage_file_path)
 
     container = SummaryContainer(containing_sleep=True, containing_readiness=True, containing_activity=True, containing_bedtime=True, containing_subjective=True)
+
+    
     # preloading everything from the storage connector
     # container.load()
     # TODO option loading everything
@@ -84,7 +87,7 @@ if __name__ == "__main__":
     analyser = plotly_analyser.PlotlyAnalyser(output_location, container)
 
 
-    subjective_input_callback_wrapper = SubjectiveInputCallbackWrapper(None, None, None, subjective_input_structure) # TODO
+    subjective_input_callback_wrapper = SubjectiveInputCallbackWrapper(conn_sub, container, storage, subjective_input_structure)
 
     app = wx.App()
     m = MainFrame(subjective_input_callback_wrapper)

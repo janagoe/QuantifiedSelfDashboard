@@ -28,8 +28,6 @@ class SubjectiveInputTab(wx.Panel):
         self.SetSizer(top_sizer)
 
 
-
-
     @property
     def display_name(self):
         return self.__display_name
@@ -49,8 +47,8 @@ class SubjectiveInputTab(wx.Panel):
             if input_type == SubjectiveMeasurementType.bool:
                 input_field = wx.CheckBox(self, -1)
             elif input_type == SubjectiveMeasurementType.percentage:
-                # TODO set limitations
                 input_field = NumCtrl(self, -1)
+                input_field.SetBounds(min=0, max=100)
             elif input_type == SubjectiveMeasurementType.number:
                 input_field = NumCtrl(self, -1)
 
@@ -126,18 +124,22 @@ class SubjectiveInputTab(wx.Panel):
 
 
     def on_save_btn_click(self, evt):
-        if True: # check valid input
-            self.disable_input_fields()
-            self.save_btn.Disable()
+        date = self.cal.GetDate()
+        year, month, day = date.GetYear(), date.GetMonth()+1, date.GetDay()
 
-            date = self.cal.GetDate()
-            selected_year = date.GetYear()
-            selected_month = date.GetMonth()+1
-            selected_day = date.GetDay()
+        date_str = "{}-{:02d}-{:02d}".format(selected_year, selected_month, selected_day)
+        self.__missing_input_days.remove(date_str)
+        self.__highlight_month_days()
 
-            date_str = "{}-{:02d}-{:02d}".format(selected_year, selected_month, selected_day)
-            self.__missing_input_days.remove(date_str)
-            self.__highlight_month_days()
+        current_input_data = dict()
+        for name, tupl in self.__input_fields.items():
+            _, input_field = tupl
+            value = input_field.GetValue()
+            current_input_data[name] = value
+        self.__subjective_input_callback_wrapper.add_subjective_input(date_str, current_input_data)
+
+        self.disable_input_fields()
+        self.save_btn.Disable()
 
 
     def enable_input_fields(self):

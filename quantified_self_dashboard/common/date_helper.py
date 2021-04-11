@@ -2,6 +2,9 @@ from datetime import datetime, timedelta
 
 
 
+# TODO: improve all date handling, exchange with pandas functionality
+
+
 def datetime_to_simple_iso(datetime_obj: datetime):
     # YYYY-MM-DD 
     # e.g. 2021-03-12
