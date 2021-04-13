@@ -1,4 +1,4 @@
-from typing import Tuple, List
+from typing import Tuple, List, Union
 from common.constants import SummaryType
 
 class AbstractConnector:
@@ -11,7 +11,7 @@ class AbstractConnector:
         raise NotImplementedError("Abstract Connector Class")
 
 
-    def get_summary(self, summary_type: SummaryType, date: str) -> Tuple[bool, dict]:
+    def get_summary_data(self, summary_type: SummaryType, date: str) -> Tuple[bool, dict]:
         """
         Retrieves the summary of the given summary type in form of a dictionary.
         Returns also whether the retrieval was successful or not.
@@ -33,3 +33,12 @@ class AbstractConnector:
 
         raise NotImplementedError("Abstract Connector Class")
 
+    def preload(self, **kwargs):
+        """
+        Loading all possible supported summaries and preparing data.
+        """
+        raise NotImplementedError("Abstract Connector Class")
+
+
+    def get_earliest_and_latest_vailable_summary_date(self) -> Tuple[Union[str, None], Union[str, None]]:
+        raise NotImplementedError("Abstract Connector Class")

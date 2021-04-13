@@ -83,4 +83,14 @@ def get_day_before(date):
     d2 = d1 - timedelta(days=1)
     return datetime_to_simple_iso(d2)
 
+
+def get_one_week_before(date):
+    d1 = simple_string_to_datetime(date)
+    week_prior = d1 - timedelta(weeks=1)
+    return datetime_to_simple_iso(week_prior)
+
+def get_one_week_after(date):
+    d1 = simple_string_to_datetime(date)
+    week_prior = d1 + timedelta(weeks=1)
+    return datetime_to_simple_iso(week_prior)
     

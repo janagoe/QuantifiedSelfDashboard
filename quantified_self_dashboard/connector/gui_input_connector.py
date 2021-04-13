@@ -1,5 +1,5 @@
 import random 
-from typing import Tuple, List
+from typing import Tuple, List, Union
 
 from common.constants import SummaryType, SubjectiveMeasurementType, SUMMARY_DATE
 from connector.abstract_connector import AbstractConnector
@@ -31,7 +31,7 @@ class GuiInputConnector(AbstractConnector):
         if len(self.__subjective_tracking_attr_types) != len(self.__subjective_tracking_attributes):
             raise ValueError("Duplication of Subjective Tracking Names")
 
-    def get_summary(self, summary_type: SummaryType, date: str) -> Tuple[bool, dict]:
+    def get_summary_data(self, summary_type: SummaryType, date: str) -> Tuple[bool, dict]:
 
         if summary_type != SummaryType.subjective:
             raise AttributeError("The GuiInputConnector can only collect Subjective Summary Types")
@@ -47,3 +47,14 @@ class GuiInputConnector(AbstractConnector):
         # TODO: add checks
         self.__input_data_sets[summary_date] = input_data
    
+    def preload(self, **kwargs):
+        # preloading process is passively done through the gui
+        pass
+
+    def get_earliest_and_latest_vailable_summary_date(self) -> Tuple[Union[str, None], Union[str, None]]:
+        available_dates = self.__input_data_sets.keys()
+
+        earliest = min(available_dates)
+        latest = max(available_dates)
+
+        return earliest, latest

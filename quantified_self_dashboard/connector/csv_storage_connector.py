@@ -1,6 +1,6 @@
 import re
 import os
-from typing import Tuple, List
+from typing import Tuple, List, Union
 
 import pandas as pd
 
@@ -30,10 +30,9 @@ class CsvStorageConnector(AbstractConnector):
         self._filename = os.path.join(os.getcwd(), *file_path)
         if not self._filename.endswith('.csv'):
             raise ValueError("Filename for CsvStorageConnector must end with .csv")
-        self.__prepare()
 
 
-    def __prepare(self):
+    def preload(self, **kwargs):
         """ Loading the csv file into a pandas DataFrame. """
         try:
             self.__data = pd.read_csv(self._filename, sep=self.__delimiter)
@@ -43,7 +42,7 @@ class CsvStorageConnector(AbstractConnector):
             self.__data = pd.DataFrame()
 
 
-    def get_summary(self, summary_type: SummaryType, date: str) -> Tuple[bool, dict]:
+    def get_summary_data(self, summary_type: SummaryType, date: str) -> Tuple[bool, dict]:
         """
         Retrieves the summary of the given summary type in form of a dictionary
         from the pandas DataFrame.
@@ -97,3 +96,12 @@ class CsvStorageConnector(AbstractConnector):
             data[summary_entry] = value
 
         return True, data
+
+
+    def get_earliest_and_latest_vailable_summary_date(self) -> Tuple[Union[str, None], Union[str, None]]:
+        available_dates = self.__data[SUMMARY_DATE].tolist()
+
+        earliest = min(available_dates)
+        latest = max(available_dates)
+
+        return earliest, latest

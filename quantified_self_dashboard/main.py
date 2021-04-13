@@ -47,13 +47,9 @@ class SubjectiveInputCallbackWrapper:
         print("save")
 
 
-    
-
-
-
-
 
 if __name__ == "__main__":
+
 
     # TODO: improve config structure
     config = configparser.ConfigParser()
@@ -78,18 +74,18 @@ if __name__ == "__main__":
 
     container = SummaryContainer(containing_sleep=True, containing_readiness=True, containing_activity=True, containing_bedtime=True, containing_subjective=True)
 
-    
-    # preloading everything from the storage connector
+
+
     # container.load()
-    # TODO option loading everything
+    # # # TODO option loading everything
 
-    storage = CsvStorage(storage_file_path)
-    analyser = plotly_analyser.PlotlyAnalyser(output_location, container)
+    # # storage = CsvStorage(storage_file_path)
+    # # analyser = plotly_analyser.PlotlyAnalyser(output_location, container)
+
+    # subjective_input_callback_wrapper = SubjectiveInputCallbackWrapper(conn_sub, container, storage, subjective_input_structure)
 
 
-    subjective_input_callback_wrapper = SubjectiveInputCallbackWrapper(conn_sub, container, storage, subjective_input_structure)
-
-    app = wx.App()
-    m = MainFrame(subjective_input_callback_wrapper)
-    m.Show()
-    app.MainLoop()
+    # app = wx.App()
+    # m = MainFrame(subjective_input_callback_wrapper)
+    # m.Show()
+    # app.MainLoop()

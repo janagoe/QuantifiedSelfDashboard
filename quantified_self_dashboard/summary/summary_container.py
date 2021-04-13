@@ -40,6 +40,11 @@ class SummaryContainer:
             Whether this container is supposed to hold subjective summaries or not.
         """
 
+        self.__api_connectors = []
+        self.__storage_connectors = []
+        self.__user_connectors = []
+
+
         # order is relevant here
         containing = [ 
             containing_sleep, 
@@ -50,6 +55,17 @@ class SummaryContainer:
         ] 
 
         self.__prepare_attributes(containing)
+
+
+    def add_storage_connector(self, conn):
+        self.__storage_connectors.append(conn)
+
+    def add_user_connector(self, conn):
+        self.__user_connectors.append(conn)
+
+    def add_api_connector(self, conn):
+        self.__api_connectors.append(conn)
+
 
     def __prepare_attributes(self, containing: List[bool]):
         """

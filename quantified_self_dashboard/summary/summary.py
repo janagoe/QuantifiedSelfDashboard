@@ -29,7 +29,7 @@ class Summary:
         we only need to retrieve data for this given day. 
         """
         
-        success, resp_dict = connector.get_summary(self._summary_type, date)
+        success, resp_dict = connector.get_summary_data(self._summary_type, date)
         
         if success:
             self._parse_connector_response(resp_dict)
