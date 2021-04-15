@@ -86,6 +86,11 @@ class CsvStorageConnector(AbstractConnector):
 
         # filtering out columns relevant for this summary type
         summary_date_entries = date_entry.loc[:, date_entry.columns.str.match(summary_type_column_identifier_re)]
+        if summary_date_entries.empty:
+            return False, dict()
+
+        if summary_date_entries.isnull().values.all():
+            return False, dict()
 
         # transforming DataFrame into dict
         data = dict()
@@ -105,3 +110,8 @@ class CsvStorageConnector(AbstractConnector):
         latest = max(available_dates)
 
         return earliest, latest
+
+
+    def is_empty(self):
+        return this.__data.empty
+        

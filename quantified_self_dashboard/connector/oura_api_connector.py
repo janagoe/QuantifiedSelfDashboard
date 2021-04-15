@@ -184,10 +184,6 @@ class OuraApiConnector(AbstractConnector):
         return merged_data, summary_count
 
 
-    def __load_data(self, date: str):
-        return self.__load_data(date, date)
-
-
     def __preload_everything(self):
         current_end_date = datetime_to_simple_iso(datetime.today())
         nothing_loaded_before = False

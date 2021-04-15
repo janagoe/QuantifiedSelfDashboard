@@ -95,6 +95,28 @@ AnalysisType = Enum(
     ]
 )
 
+all_analysis_types = [
+    AnalysisType.scores_daily,
+    AnalysisType.scores_weekly,
+    AnalysisType.scores_monthly,
+    AnalysisType.scores_weekdays,
+    AnalysisType.sleep_durations_daily,
+    AnalysisType.sleep_durations_weekly,
+    AnalysisType.sleep_durations_monthly,
+    AnalysisType.sleep_durations_weekdays,
+    AnalysisType.bedtimes_daily,
+    AnalysisType.bedtimes_weekly,
+    AnalysisType.bedtimes_monthly,
+    AnalysisType.bedtimes_weekdays,
+    AnalysisType.recovery_indicators_daily,
+    AnalysisType.recovery_indicators_weekly,
+    AnalysisType.recovery_indicators_monthly,
+    AnalysisType.recovery_indicators_weekdays,
+    AnalysisType.sleep_score_distribution,
+    AnalysisType.readiness_score_distribution,
+    AnalysisType.activity_score_distribution,
+]
+
 
 # SubjectiveMeasurementTypes ------------------------------
 

@@ -1,10 +1,10 @@
 from typing import List, Union
-
+import datetime
 import numpy as np
 
 from summary.summary import Summary, get_summary_class_from_type
 from common.constants import SummaryType, SUMMARY_DATE
-from common.date_helper import all_date_strings_between_dates, is_date_within_range
+from common.date_helper import all_date_strings_between_dates, is_date_within_range, datetime_to_simple_iso
 from connector.abstract_connector import AbstractConnector
 
 
@@ -18,7 +18,7 @@ class SummaryContainer:
     __possible_summaries = [SummaryType.sleep, SummaryType.readiness, SummaryType.activity, SummaryType.bedtime, SummaryType.subjective]
 
 
-    def __init__(self, containing_sleep=False, containing_readiness=False, containing_activity=False, containing_bedtime=False, containing_subjective=False):
+    def __init__(self, starting_date: str, containing_sleep=False, containing_readiness=False, containing_activity=False, containing_bedtime=False, containing_subjective=False):
         """
         Making preparations to load summaries.
 
@@ -40,10 +40,11 @@ class SummaryContainer:
             Whether this container is supposed to hold subjective summaries or not.
         """
 
+        self.__starting_date = starting_date
+
         self.__api_connectors = []
         self.__storage_connectors = []
         self.__user_connectors = []
-
 
         # order is relevant here
         containing = [ 
@@ -66,13 +67,13 @@ class SummaryContainer:
     def add_api_connector(self, conn):
         self.__api_connectors.append(conn)
 
-
     def __prepare_attributes(self, containing: List[bool]):
         """
         Preparing dynamic attributes depending on the containing summary types for loading.
 
         In e.g. the __sleep_container attribute the loaded sleep summaries will be stored as a list.
-        The __required_dates_sleep is a helper list for the loading process, which will be deleted afterwards.
+        The __required_dates_sleep is a helper list for the loading process and initially
+        filled with all dates from the starting date until today.
         For each contained summary type these two attributes will be created.
 
         Parameters
@@ -106,6 +107,11 @@ class SummaryContainer:
         for container_attribute_name in self.__summary_container_attribute_names:
             setattr(self, container_attribute_name, [])   
 
+        # filling the required dates helper atrributes with all dates from the starting date until today
+        self.__dates = all_date_strings_between_dates(self.__starting_date, datetime_to_simple_iso(datetime.datetime.today()))
+        for required_date_attribute_name in self.__summary_required_dates_attribute_names:
+            setattr(self, required_date_attribute_name, self.__dates)   
+
 
     def __load_via_connector(self, connector: AbstractConnector):
         """
@@ -128,11 +134,14 @@ class SummaryContainer:
             if summary_type not in common_summary_types:
                 continue
             
+            # still required dates from the previous connector
+            required_dates_for_summary_type = getattr(self, required_dates_attr)
+            if len(required_dates_for_summary_type) == 0:
+                continue
+
             # summary object constructor
             summary_class = get_summary_class_from_type(summary_type)
 
-            # still required dates from the previous connector
-            required_dates_for_summary_type = getattr(self, required_dates_attr)
 
             # required dates which could not be loaded by this connector
             still_required_dates = []
@@ -159,21 +168,19 @@ class SummaryContainer:
             setattr(self, container_attr, new_summary_objects + old_summary_objects)
         
 
-    def load(self, connectors: List[AbstractConnector], start: str, end: str) -> bool: 
+    def preload(self):
+        for storage_conn in self.__storage_connectors:
+            storage_conn.preload()
+
+        # TODO add threads
+        for api_conn in self.__api_connectors:
+            api_conn.preload(everything=True)
+
+
+    def load(self) -> bool: 
         """
         Trying to load all required data from the start until end date,
         by making use of all given available connectors.
-
-        Parameters
-        ----------
-        connectors : List[AbstractConnector]
-            List of all available connectors to retrieve summaries from
-
-        start : str
-            Start date in YYYY-MM-DD format at which to start loading from.
-
-        end : str
-            End date in YYYY-MM-DD format at which to end loading from.
 
         Returns
         -------
@@ -181,17 +188,10 @@ class SummaryContainer:
             whether all dates could get loaded or not
         """
 
-        # all dates that need to be loaded
-        dates = all_date_strings_between_dates(start, end)
-        if not len(dates) > 0:
-            raise AttributeError()
-
-        # in beginning all dates are required for all summary types
-        for required_dates_attr in self.__summary_required_dates_attribute_names:
-            setattr(self, required_dates_attr, dates)
+        
 
         # letting each connector try to load as many of the required summaries
-        for conn in connectors:
+        for conn in self.__storage_connectors + self.__api_connectors + self.__user_connectors:
             self.__load_via_connector(conn)
 
         # sorting by date
@@ -201,21 +201,6 @@ class SummaryContainer:
             container_of_type = getattr(self, container_attr_name)
             sorted_container = sorted(container_of_type, key=lambda s: s.summary_date)
             setattr(self, container_attr_name, sorted_container)
-
-        # checking if all required dates got loaded and deleting dynamic helper attributes
-        all_loaded = True
-        for req_attr in self.__summary_required_dates_attribute_names:
-            req_dates = getattr(self, req_attr)
-            if len(req_dates) > 0:
-                all_loaded = False
-            # removing helper attributes
-            delattr(self, req_attr)
-
-        if not all_loaded:
-            print("Not all summaries were able to load. Is the access token set correctly?")
-
-        self.__dates = dates
-        return all_loaded
 
 
     def __get_container_attribute_name(self, summary_type: SummaryType) -> str:
@@ -248,6 +233,20 @@ class SummaryContainer:
         return None
 
 
+    
+    def get_dict_of_bundles(self) -> dict[int, dict]:
+        """
+        Building and returning a dictionary which is containing dictionaries for each date. 
+        Each inner dictionarys keys are the attributes of all summary objects.
+        The keys of the outer dictionary are indices.
+        """
+
+        data = dict()
+        for index, date in enumerate(self.__dates):
+            bundle = self.get_summary_bundle_of_date(date)
+            data[index] = bundle
+        return data
+
     def get_summary_bundle_of_date(self, date: str) -> dict:
         """
         Building and returning a dictionary which is containing
@@ -274,20 +273,6 @@ class SummaryContainer:
                 bundle[bundle_attr_name] = getattr(summary, attr)
 
         return bundle
-
-
-    def get_dict_of_bundles(self) -> dict[int, dict]:
-        """
-        Building and returning a dictionary which is containing dictionaries for each date. 
-        Each inner dictionarys keys are the attributes of all summary objects.
-        The keys of the outer dictionary are indices.
-        """
-
-        data = dict()
-        for index, date in enumerate(self.__dates):
-            bundle = self.get_summary_bundle_of_date(date)
-            data[index] = bundle
-        return data
 
 
     def get_values(self, start: str, end: str, summary_type: SummaryType, measurement_name: str, output_as_np_array=True) -> Union[np.array, List]:
@@ -332,3 +317,11 @@ class SummaryContainer:
 
         return values
 
+    def get_missing_subjective_data_days(self) -> List[str]:
+        given_dates = []
+        for summary_obj in getattr(self, self.__get_container_attribute_name(SummaryType.subjective)):
+            date = summary_obj.summary_date
+            given_dates.append(date)
+        
+        missing_dates = sorted(set(self.__dates) - set(given_dates))
+        return missing_dates

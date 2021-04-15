@@ -45,6 +45,7 @@ class GuiInputConnector(AbstractConnector):
 
     def add_subjective_input(self, summary_date: str, input_data: dict()):
         # TODO: add checks
+        input_data[SUMMARY_DATE] = summary_date
         self.__input_data_sets[summary_date] = input_data
    
     def preload(self, **kwargs):

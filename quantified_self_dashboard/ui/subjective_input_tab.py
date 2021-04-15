@@ -127,7 +127,7 @@ class SubjectiveInputTab(wx.Panel):
         date = self.cal.GetDate()
         year, month, day = date.GetYear(), date.GetMonth()+1, date.GetDay()
 
-        date_str = "{}-{:02d}-{:02d}".format(selected_year, selected_month, selected_day)
+        date_str = "{}-{:02d}-{:02d}".format(year, month, day)
         self.__missing_input_days.remove(date_str)
         self.__highlight_month_days()
 
